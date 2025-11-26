@@ -4,7 +4,7 @@
 
 load("@//rules:repo.bzl", "http_archive_or_local")
 
-_PROTOBUF_VERSION = "3.20.1"
+_PROTOBUF_VERSION = "3.19.6"
 _GRPC_VERSION = "1.52.0"
 
 def protobuf_repos(protobuf = None, grpc = None):
@@ -13,7 +13,7 @@ def protobuf_repos(protobuf = None, grpc = None):
         name = "com_google_protobuf",
         local = protobuf,
         url = "https://github.com/protocolbuffers/protobuf/releases/download/v{}/protobuf-all-{}.tar.gz".format(_PROTOBUF_VERSION, _PROTOBUF_VERSION),
-        sha256 = "3a400163728db996e8e8d21c7dfb3c239df54d0813270f086c4030addeae2fad",
+        sha256 = "e815887fcd7d5a91e94c1efbf46d48b6db32928c14f71987f6018f7afd115983",
         strip_prefix = "protobuf-{}".format(_PROTOBUF_VERSION),
     )
 
