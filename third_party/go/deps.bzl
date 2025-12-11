@@ -70,6 +70,13 @@ def go_packages_():
         version = "v1.0.3",
     )
     go_repository(
+        name = "in_gopkg_yaml_v3",
+        build_file_proto_mode = "disable_global",
+        importpath = "gopkg.in/yaml.v3",
+        sum = "h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=",
+        version = "v3.0.1",
+    )
+    go_repository(
         name = "io_gorm_driver_sqlite",
         build_file_proto_mode = "disable_global",
         importpath = "gorm.io/driver/sqlite",

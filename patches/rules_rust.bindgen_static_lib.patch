@@ -1,0 +1,24 @@
+diff --git a/extensions/bindgen/private/bindgen.bzl b/extensions/bindgen/private/bindgen.bzl
+--- private/bindgen.bzl
++++ private/bindgen.bzl
+@@ -152,11 +152,6 @@ def _generate_cc_link_build_info(ctx, cc_lib):
+                 linker_search_paths.append(lib.pic_static_library.dirname)
+                 compile_data.append(lib.pic_static_library)
+ 
+-    if not compile_data:
+-        fail("No static libraries found in {}".format(
+-            cc_lib.label,
+-        ))
+-
+     rustc_flags_file = ctx.actions.declare_file("{}.rustc_flags".format(ctx.label.name))
+     ctx.actions.write(
+         output = rustc_flags_file,
+@@ -233,6 +228,8 @@ def _rust_bindgen_impl(ctx):
+ 
+     # Configure Clang Arguments
+     args.add("--")
++    args.add("-resource-dir", libclang_dir + "/clang/10.0.0")
++    args.add("-isystem", libclang_dir + "/clang/10.0.0/include")
+ 
+     compile_variables = cc_common.create_compile_variables(
+         cc_toolchain = cc_toolchain,
