@@ -22,10 +22,7 @@ namespace {
 using testing::EqualsProto;
 
 class AteJsonTest : public ::testing::Test {
-  void SetUp() {
-    std::cout << "Hello world WZ\n";
-  }
-
+  void SetUp() { std::cout << "Hello world WZ\n"; }
 };
 
 TEST_F(AteJsonTest, TokensToJson) {
@@ -137,7 +134,8 @@ TEST_F(AteJsonTest, DeviceIdFromJson) {
 //   token_t rma_token_got = {0};
 //   EXPECT_EQ(RmaTokenFromJson(&dut_to_ate_frame, &rma_token_got), 0);
 //   EXPECT_THAT(rma_token_got.data, testing::ElementsAreArray(
-//                                       rma_token.data, sizeof(rma_token.data)));
+//                                       rma_token.data,
+//                                       sizeof(rma_token.data)));
 //   EXPECT_EQ(rma_token_got.size, sizeof(uint64_t) * 2);
 // }
 
@@ -148,9 +146,9 @@ TEST_F(AteJsonTest, DeviceIdFromJson) {
 //   rma_token.data[1] = 0x22;
 
 //   dut_spi_frame_t frame_with_crc;
-//   EXPECT_EQ(RmaTokenToJson(&rma_token, &frame_with_crc, /*skip_crc=*/false), 0);
-//   dut_spi_frame_t frame_without_crc;
-//   EXPECT_EQ(RmaTokenToJson(&rma_token, &frame_without_crc, /*skip_crc=*/true),
+//   EXPECT_EQ(RmaTokenToJson(&rma_token, &frame_with_crc, /*skip_crc=*/false),
+//   0); dut_spi_frame_t frame_without_crc; EXPECT_EQ(RmaTokenToJson(&rma_token,
+//   &frame_without_crc, /*skip_crc=*/true),
 //             0);
 
 //   std::string json_string_without_crc =
@@ -178,7 +176,8 @@ TEST_F(AteJsonTest, DeviceIdFromJson) {
 //   token_t rma_token_got = {0};
 //   EXPECT_EQ(RmaTokenFromJson(&dut_to_ate_frame_with_crc, &rma_token_got), 0);
 //   EXPECT_THAT(rma_token_got.data, testing::ElementsAreArray(
-//                                       rma_token.data, sizeof(rma_token.data)));
+//                                       rma_token.data,
+//                                       sizeof(rma_token.data)));
 //   EXPECT_EQ(rma_token_got.size, sizeof(uint64_t) * 2);
 // }
 
