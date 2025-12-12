@@ -186,9 +186,8 @@ DLLEXPORT int TokensToJson(const token_t *wafer_auth_secret,
   options.add_whitespace = false;
   options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  absl::Status status =
-      google::protobuf::util::MessageToJsonString(tokens_cmd, &command,
-                                                  options);
+  absl::Status status = google::protobuf::util::MessageToJsonString(
+      tokens_cmd, &command, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to convert tokens to JSON: " << status.ToString();
     return -1;
@@ -211,9 +210,8 @@ DLLEXPORT int DeviceIdFromJson(const dut_spi_frame_t *frame,
   ot::dut_commands::DeviceIdJSON device_id_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_str, &device_id_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_str, &device_id_cmd, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to parse JSON: " << status.ToString();
     return -1;
@@ -250,9 +248,8 @@ DLLEXPORT int RmaTokenToJson(const token_t *rma_token, dut_spi_frame_t *result,
   options.add_whitespace = false;
   options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  absl::Status status =
-      google::protobuf::util::MessageToJsonString(rma_hash_cmd, &command,
-                                                  options);
+  absl::Status status = google::protobuf::util::MessageToJsonString(
+      rma_hash_cmd, &command, options);
   if (!skip_crc) {
     // The personalization firmware expects a CRC on this JSON payload.
     uint32_t crc = CalculateCrc32(command.data(), command.length());
@@ -288,9 +285,8 @@ DLLEXPORT int RmaTokenFromJson(const dut_spi_frame_t *frame,
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
 
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_str, &rma_hash_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_str, &rma_hash_cmd, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to parse JSON: " << status.ToString();
     return -1;
@@ -337,9 +333,8 @@ DLLEXPORT int CaSubjectKeysToJson(const ca_subject_key_t *dice_ca_sn,
   options.add_whitespace = false;
   options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  absl::Status status =
-      google::protobuf::util::MessageToJsonString(ca_key_ids_cmd, &command,
-                                                  options);
+  absl::Status status = google::protobuf::util::MessageToJsonString(
+      ca_key_ids_cmd, &command, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to convert CA serial number command to JSON: "
                << status.ToString();
@@ -437,9 +432,8 @@ DLLEXPORT int PersoBlobFromJson(const dut_spi_frame_t *frames,
   }
   std::string cleaned_json_str = TrimJsonString(json_str);
 
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(cleaned_json_str, &blob_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      cleaned_json_str, &blob_cmd, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to parse JSON: " << status.ToString();
     return -1;
@@ -470,9 +464,8 @@ DLLEXPORT int Sha256HashFromJson(const dut_spi_frame_t *frame,
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
 
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_str, &sha256_hash_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_str, &sha256_hash_cmd, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to parse JSON: " << status.ToString();
     return -1;

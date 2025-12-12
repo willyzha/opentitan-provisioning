@@ -47,9 +47,8 @@ TEST_F(AteJsonTest, TokensToJson) {
   ot::dut_commands::TokensJSON tokens_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_string, &tokens_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_string, &tokens_cmd, options);
   EXPECT_EQ(status.ok(), true);
   EXPECT_THAT(tokens_cmd, EqualsProto(R"pb(
                 wafer_auth_secret: 1
@@ -79,9 +78,8 @@ TEST_F(AteJsonTest, DeviceIdFromJson) {
   options.add_whitespace = false;
   options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  absl::Status status =
-      google::protobuf::util::MessageToJsonString(device_id_cmd, &command,
-                                                  options);
+  absl::Status status = google::protobuf::util::MessageToJsonString(
+      device_id_cmd, &command, options);
   EXPECT_EQ(status.ok(), true);
 
   dut_spi_frame_t frame = {0};
@@ -116,9 +114,8 @@ TEST_F(AteJsonTest, RmaTokenWithoutCrc) {
   ot::dut_commands::RmaTokenJSON rma_hash_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_string, &rma_hash_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_string, &rma_hash_cmd, options);
   EXPECT_EQ(status.ok(), true);
   EXPECT_THAT(rma_hash_cmd, EqualsProto(R"pb(
                 hash: 8721 hash: 0
@@ -158,9 +155,8 @@ TEST_F(AteJsonTest, RmaTokenWithCrc) {
   ot::dut_commands::RmaTokenJSON rma_hash_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_string_without_crc,
-                                                  &rma_hash_cmd, options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_string_without_crc, &rma_hash_cmd, options);
   EXPECT_EQ(status.ok(), true);
   EXPECT_THAT(rma_hash_cmd, EqualsProto(R"pb(
                 hash: 8721 hash: 0
@@ -196,9 +192,8 @@ TEST_F(AteJsonTest, CaSubjectKeys) {
   ot::dut_commands::CaSubjectKeysJSON ca_key_ids_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  absl::Status status =
-      google::protobuf::util::JsonStringToMessage(json_string, &ca_key_ids_cmd,
-                                                  options);
+  absl::Status status = google::protobuf::util::JsonStringToMessage(
+      json_string, &ca_key_ids_cmd, options);
   EXPECT_EQ(status.ok(), true);
   EXPECT_THAT(ca_key_ids_cmd, EqualsProto(R"pb(
                 dice_auth_key_key_id: 65
