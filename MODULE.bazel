@@ -12,6 +12,7 @@ llvm.toolchain(
 )
 use_repo(llvm, "llvm_toolchain_llvm")
 use_repo(llvm, "llvm_toolchain_host")
+
 register_toolchains("@llvm_toolchain_host//:all")
 # ------------------------
 
@@ -24,16 +25,16 @@ bazel_dep(name = "rules_cc", version = "0.1.2")
 bazel_dep(name = "rules_fuzzing", version = "0.5.2")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 bazel_dep(name = "rules_rust", version = "0.59.2")
+
 # 1. Use a modern gRPC (compatible with Protobuf 27+)
 bazel_dep(name = "grpc", version = "1.66.0.bcr.3", repo_name = "com_github_grpc_grpc")
-
 single_version_override(
     module_name = "grpc",
+    patch_strip = 0,
     patches = [
         "patches/grpc_windows_config_setting.patch",
         "patches/grpc_windows_endpoint_fix.patch",
     ],
-    patch_strip = 0,
 )
 
 # 2. Pin Protobuf explicitly to ensure sync
@@ -41,20 +42,17 @@ bazel_dep(name = "protobuf", version = "27.3")
 
 # 3. Explicitly add upb (required by gRPC 1.66+ in Bzlmod)
 bazel_dep(name = "upb", version = "0.0.0-20230907-e7430e6")
-
 bazel_dep(name = "rules_apple", version = "3.5.1", repo_name = "build_bazel_rules_apple")
 bazel_dep(name = "rules_swift", version = "1.18.0", repo_name = "build_bazel_rules_swift")
 
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
-
 crate.from_cargo(
     # 1. CHANGE THIS NAME (internal handle only)
-    name = "provisioning_index", 
+    name = "provisioning_index",
     cargo_lockfile = "@lowrisc_opentitan//third_party/rust:Cargo.lock",
     manifests = ["@lowrisc_opentitan//third_party/rust:Cargo.toml"],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )
-
 use_repo(crate, crate_index = "provisioning_index")
 
 # Dev dependencies:
@@ -67,6 +65,7 @@ bazel_dep(
     name = "lowrisc_misc_linters",
     dev_dependency = True,
 )
+
 bazel_dep(
     name = "lowrisc_opentitan",
 )
@@ -80,24 +79,22 @@ archive_override(
 
 # 1. Depend on the version OpenTitan expects
 bazel_dep(name = "toolchains_llvm", version = "1.1.2")
-
 single_version_override(
     module_name = "toolchains_llvm",
-    patches = ["patches/toolchains_llvm_no_root_check.patch"],
     patch_strip = 0,
+    patches = ["patches/toolchains_llvm_no_root_check.patch"],
 )
 
 archive_override(
     module_name = "lowrisc_opentitan",
     integrity = "sha256-dlAOmYr6B0VvdsvDoDQkM1GM3Fc9qYxgmEnXQG+d07k=",
-    patches = ["patches/lowrisc_opentitan_libclang.patch"],
     patch_strip = 0,
+    patches = ["patches/lowrisc_opentitan_libclang.patch"],
     strip_prefix = "opentitan-Earlgrey-A2-Orchestrator-RC4",
     urls = ["https://github.com/lowRISC/opentitan/archive/refs/tags/Earlgrey-A2-Orchestrator-RC4.tar.gz"],
 )
 
 bazel_dep(name = "rules_python", version = "1.2.0")
-
 single_version_override(
     module_name = "rules_python",
     patch_strip = 0,

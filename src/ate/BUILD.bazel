@@ -10,7 +10,7 @@ package(default_visibility = ["//visibility:public"])
 
 WINDOWS_LIBS = [
     "-lbcrypt",  # aka: bcrypt.lib
-    "-lcrypt32", # aka: crypt32.lib
+    "-lcrypt32",  # aka: crypt32.lib
     "-ldbghelp",  # aka: dbghelp.lib
     "-lws2_32",  # aka: ws2_32.lib
     "-lstdc++",  # Standard C++ library
