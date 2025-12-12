@@ -10,6 +10,7 @@
 #include <string>
 
 #include "absl/memory/memory.h"
+#include "absl/status/status.h"
 #include "src/ate/ate_api.h"
 #include "src/ate/proto/dut_commands.pb.h"
 #include "src/pa/proto/pa.grpc.pb.h"
@@ -46,7 +47,7 @@ TEST_F(AteJsonTest, TokensToJson) {
   ot::dut_commands::TokensJSON tokens_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_string, &tokens_cmd,
                                                   options);
   EXPECT_EQ(status.ok(), true);
@@ -74,11 +75,11 @@ TEST_F(AteJsonTest, DeviceIdFromJson) {
   device_id_cmd.add_cp_device_id(0x0);
 
   std::string command;
-  google::protobuf::util::JsonOptions options;
+  google::protobuf::util::JsonPrintOptions options;
   options.add_whitespace = false;
-  options.always_print_primitive_fields = true;
+  options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::MessageToJsonString(device_id_cmd, &command,
                                                   options);
   EXPECT_EQ(status.ok(), true);
@@ -115,7 +116,7 @@ TEST_F(AteJsonTest, RmaTokenWithoutCrc) {
   ot::dut_commands::RmaTokenJSON rma_hash_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_string, &rma_hash_cmd,
                                                   options);
   EXPECT_EQ(status.ok(), true);
@@ -157,7 +158,7 @@ TEST_F(AteJsonTest, RmaTokenWithCrc) {
   ot::dut_commands::RmaTokenJSON rma_hash_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_string_without_crc,
                                                   &rma_hash_cmd, options);
   EXPECT_EQ(status.ok(), true);
@@ -195,7 +196,7 @@ TEST_F(AteJsonTest, CaSubjectKeys) {
   ot::dut_commands::CaSubjectKeysJSON ca_key_ids_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_string, &ca_key_ids_cmd,
                                                   options);
   EXPECT_EQ(status.ok(), true);

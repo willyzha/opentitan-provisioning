@@ -81,6 +81,8 @@ single_version_override(
 archive_override(
     module_name = "lowrisc_opentitan",
     integrity = "sha256-dlAOmYr6B0VvdsvDoDQkM1GM3Fc9qYxgmEnXQG+d07k=",
+    patches = ["patches/lowrisc_opentitan_libclang.patch"],
+    patch_strip = 0,
     strip_prefix = "opentitan-Earlgrey-A2-Orchestrator-RC4",
     urls = ["https://github.com/lowRISC/opentitan/archive/refs/tags/Earlgrey-A2-Orchestrator-RC4.tar.gz"],
 )

@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "absl/log/log.h"
+#include "absl/status/status.h"
 #include "absl/strings/str_format.h"
 #include "src/ate/ate_api.h"
 #include "src/ate/proto/dut_commands.pb.h"
@@ -181,11 +182,11 @@ DLLEXPORT int TokensToJson(const token_t *wafer_auth_secret,
 
   // Convert the provisioning data to a JSON string.
   std::string command;
-  google::protobuf::util::JsonOptions options;
+  google::protobuf::util::JsonPrintOptions options;
   options.add_whitespace = false;
-  options.always_print_primitive_fields = true;
+  options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::MessageToJsonString(tokens_cmd, &command,
                                                   options);
   if (!status.ok()) {
@@ -210,7 +211,7 @@ DLLEXPORT int DeviceIdFromJson(const dut_spi_frame_t *frame,
   ot::dut_commands::DeviceIdJSON device_id_cmd;
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_str, &device_id_cmd,
                                                   options);
   if (!status.ok()) {
@@ -245,11 +246,11 @@ DLLEXPORT int RmaTokenToJson(const token_t *rma_token, dut_spi_frame_t *result,
   }
 
   std::string command;
-  google::protobuf::util::JsonOptions options;
+  google::protobuf::util::JsonPrintOptions options;
   options.add_whitespace = false;
-  options.always_print_primitive_fields = true;
+  options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::MessageToJsonString(rma_hash_cmd, &command,
                                                   options);
   if (!skip_crc) {
@@ -287,7 +288,7 @@ DLLEXPORT int RmaTokenFromJson(const dut_spi_frame_t *frame,
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
 
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_str, &rma_hash_cmd,
                                                   options);
   if (!status.ok()) {
@@ -332,11 +333,11 @@ DLLEXPORT int CaSubjectKeysToJson(const ca_subject_key_t *dice_ca_sn,
   }
 
   std::string command;
-  google::protobuf::util::JsonOptions options;
+  google::protobuf::util::JsonPrintOptions options;
   options.add_whitespace = false;
-  options.always_print_primitive_fields = true;
+  options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::MessageToJsonString(ca_key_ids_cmd, &command,
                                                   options);
   if (!status.ok()) {
@@ -375,11 +376,11 @@ DLLEXPORT int PersoBlobToJson(const perso_blob_t *blob, dut_spi_frame_t *result,
   }
 
   std::string command;
-  google::protobuf::util::JsonOptions options;
+  google::protobuf::util::JsonPrintOptions options;
   options.add_whitespace = false;
-  options.always_print_primitive_fields = true;
+  options.always_print_fields_with_no_presence = true;
   options.preserve_proto_field_names = true;
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::MessageToJsonString(blob_cmd, &command, options);
   if (!status.ok()) {
     LOG(ERROR) << "Failed to convert token hash command to JSON: "
@@ -436,7 +437,7 @@ DLLEXPORT int PersoBlobFromJson(const dut_spi_frame_t *frames,
   }
   std::string cleaned_json_str = TrimJsonString(json_str);
 
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(cleaned_json_str, &blob_cmd,
                                                   options);
   if (!status.ok()) {
@@ -469,7 +470,7 @@ DLLEXPORT int Sha256HashFromJson(const dut_spi_frame_t *frame,
   google::protobuf::util::JsonParseOptions options;
   options.ignore_unknown_fields = true;
 
-  google::protobuf::util::Status status =
+  absl::Status status =
       google::protobuf::util::JsonStringToMessage(json_str, &sha256_hash_cmd,
                                                   options);
   if (!status.ok()) {
