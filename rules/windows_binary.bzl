@@ -1,4 +1,6 @@
-# rules/windows_binary.bzl
+# Copyright lowRISC contributors (OpenTitan project).
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
 
 def _windows_platform_transition_impl(settings, attr):
     return {

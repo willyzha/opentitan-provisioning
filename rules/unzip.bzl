@@ -1,3 +1,7 @@
+# Copyright lowRISC contributors (OpenTitan project).
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+
 def _unzip_archive_impl(ctx):
     out_dir = ctx.actions.declare_directory(ctx.attr.out)
     ctx.actions.run_shell(
