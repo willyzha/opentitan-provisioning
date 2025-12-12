@@ -56,6 +56,8 @@ def google_repos(
         strip_prefix = "protobuf-matchers-7c8e15741bcea83db7819cc472c3e96301a95158",
         build_file_content = "package(default_visibility = [\"//visibility:public\"])",
         sha256 = "8314521014fb7b5e33f061d0f53a3c7222dbee1871df2f66198522a5687a71c1",
+        patches = [Label("//third_party/google:protobuf_matchers_fix.patch")],
+        patch_args = ["-p1"],
     )
 
     # Abseil https://abseil.io/

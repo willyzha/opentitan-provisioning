@@ -91,10 +91,10 @@ google_repos()
 
 # Protobuf rules.
 load("//third_party/protobuf:repos.bzl", "protobuf_repos")
-protobuf_repos()
+# protobuf_repos()
 # Load the proto deps in the right order
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-protobuf_deps()
+# load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+# protobuf_deps()
 # load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 # grpc_deps()
 # load("@com_github_grpc_grpc//bazel:grpc_extra_deps.bzl", "grpc_extra_deps")

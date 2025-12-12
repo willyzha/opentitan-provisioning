@@ -19,10 +19,10 @@ int RxSpiFrameSet(dut_spi_frame_t *frame, const std::string &payload) {
     return -1;
   }
   // This is an unlikely error.
-  if (payload.size() > sizeof(frame->payload)) {
+  if (payload.size() > kDutRxSpiFrameSizeInBytes) {
     LOG(ERROR) << "Output buffer size is too small"
                << " (expected: >=" << payload.size()
-               << ", got: " << sizeof(frame->payload) << ")";
+               << ", got: " << kDutRxSpiFrameSizeInBytes << ")";
     return -1;
   }
 
@@ -152,10 +152,10 @@ DLLEXPORT int TokensToJson(const token_t *wafer_auth_secret,
     LOG(ERROR) << "Invalid wafer auth secret" << wafer_auth_secret->size;
     return -1;
   }
-  const uint32_t *was_ptr =
-      reinterpret_cast<const uint32_t *>(wafer_auth_secret->data);
   for (size_t i = 0; i < 8; ++i) {
-    tokens_cmd.add_wafer_auth_secret(was_ptr[i]);
+    uint32_t val;
+    memcpy(&val, wafer_auth_secret->data + i * sizeof(uint32_t), sizeof(val));
+    tokens_cmd.add_wafer_auth_secret(val);
   }
 
   if (test_unlock_token == nullptr ||
@@ -163,10 +163,10 @@ DLLEXPORT int TokensToJson(const token_t *wafer_auth_secret,
     LOG(ERROR) << "Invalid test unlock token" << test_unlock_token->size;
     return -1;
   }
-  const uint64_t *test_unlock_token_ptr =
-      reinterpret_cast<const uint64_t *>(test_unlock_token->data);
   for (size_t i = 0; i < 2; ++i) {
-    tokens_cmd.add_test_unlock_token_hash(test_unlock_token_ptr[i]);
+    uint64_t val;
+    memcpy(&val, test_unlock_token->data + i * sizeof(uint64_t), sizeof(val));
+    tokens_cmd.add_test_unlock_token_hash(val);
   }
 
   if (test_exit_token == nullptr ||
@@ -174,10 +174,10 @@ DLLEXPORT int TokensToJson(const token_t *wafer_auth_secret,
     LOG(ERROR) << "Invalid test exit token" << test_exit_token->size;
     return -1;
   }
-  const uint64_t *test_exit_token_ptr =
-      reinterpret_cast<const uint64_t *>(test_exit_token->data);
   for (size_t i = 0; i < 2; ++i) {
-    tokens_cmd.add_test_exit_token_hash(test_exit_token_ptr[i]);
+    uint64_t val;
+    memcpy(&val, test_exit_token->data + i * sizeof(uint64_t), sizeof(val));
+    tokens_cmd.add_test_exit_token_hash(val);
   }
 
   // Convert the provisioning data to a JSON string.
@@ -237,10 +237,10 @@ DLLEXPORT int RmaTokenToJson(const token_t *rma_token, dut_spi_frame_t *result,
     LOG(ERROR) << "Invalid RMA token" << rma_token->size;
     return -1;
   }
-  const uint64_t *rma_token_ptr =
-      reinterpret_cast<const uint64_t *>(rma_token->data);
   for (size_t i = 0; i < 2; ++i) {
-    rma_hash_cmd.add_hash(rma_token_ptr[i]);
+    uint64_t val;
+    memcpy(&val, rma_token->data + i * sizeof(uint64_t), sizeof(val));
+    rma_hash_cmd.add_hash(val);
   }
 
   std::string command;

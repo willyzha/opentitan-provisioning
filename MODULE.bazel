@@ -38,7 +38,7 @@ single_version_override(
 )
 
 # 2. Pin Protobuf explicitly to ensure sync
-bazel_dep(name = "protobuf", version = "27.3")
+bazel_dep(name = "protobuf", version = "27.3", repo_name = "com_google_protobuf")
 
 # 3. Explicitly add upb (required by gRPC 1.66+ in Bzlmod)
 bazel_dep(name = "upb", version = "0.0.0-20230907-e7430e6")
