@@ -16,7 +16,7 @@ register_toolchains("@llvm_toolchain_host//:all")
 # ------------------------
 
 # Dependencies:
-bazel_dep(name = "abseil-cpp", version = "20240116.1")
+bazel_dep(name = "abseil-cpp", version = "20240116.1", repo_name = "com_google_absl")
 bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "googletest", version = "1.14.0.bcr.1", repo_name = "com_google_googletest")
 bazel_dep(name = "platforms", version = "0.0.11")
