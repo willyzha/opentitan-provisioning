@@ -34,9 +34,7 @@ crt_register_toolchains(
 # load("//third_party/go:deps.bzl", "go_deps")
 # go_deps()
 
-# Various linters.
-load("//third_party/lint:repos.bzl", "lint_repos")
-lint_repos()
+
 
 
 
