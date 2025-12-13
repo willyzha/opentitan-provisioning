@@ -238,7 +238,10 @@ http_archive(
 
 http_archive(
     name = "protolint",
-    build_file = "//third_party/lint:BUILD.protolint.bazel",
+    build_file_content = """package(default_visibility = ["//visibility:public"])
+
+exports_files(glob(["**"]))
+""",
     sha256 = "f6073ee43c8f87d4a9a8479f5f806f3d3d06741534ae0facbe135a632c4e5988",
     urls = ["https://github.com/yoheimuta/protolint/releases/download/v0.50.5/protolint_0.50.5_linux_amd64.tar.gz"],
 )
@@ -247,7 +250,10 @@ deb_package = use_repo_rule("//rules:util.bzl", "deb_package")
 
 deb_package(
     name = "clang_format",
-    build_file = "//third_party/lint:BUILD.clang-format.bazel",
+    build_file_content = """package(default_visibility = ["//visibility:public"])
+
+exports_files(["clang-format"])
+""",
     extra_debs = {
         "http://ftp.us.debian.org/debian/pool/main/l/llvm-toolchain-14/libclang-cpp14_14.0.6-12_amd64.deb": "964b13d74e9aece340cde93fecd2a2f18dd63afcb707a797ce7b39d430a01c46",
         "http://ftp.us.debian.org/debian/pool/main/l/llvm-toolchain-14/libllvm14_14.0.6-12_amd64.deb": "cd986403cfe53f47c41b80667f6b344c40fe35de4c5081dad9358b4c77cf64a8",

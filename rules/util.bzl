@@ -24,14 +24,20 @@ exec "$REAL_BINARY" "$@"
 """
     rctx.file("clang-format", content = wrapper_content, executable = True)
 
-    rctx.symlink(rctx.attr.build_file, "BUILD")
+    if rctx.attr.build_file_content:
+        rctx.file("BUILD", content = rctx.attr.build_file_content)
+    elif rctx.attr.build_file:
+        rctx.symlink(rctx.attr.build_file, "BUILD")
+    else:
+        fail("One of build_file or build_file_content must be provided.")
 
 deb_package = repository_rule(
     implementation = _deb_package_impl,
     attrs = {
         "url": attr.string(mandatory = True),
         "sha256": attr.string(mandatory = True),
-        "build_file": attr.label(mandatory = True),
+        "build_file": attr.label(),
+        "build_file_content": attr.string(),
         "extra_debs": attr.string_dict(default = {}),
     },
 )
