@@ -5,7 +5,7 @@
 load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 load("@//rules:repo.bzl", "http_archive_or_local")
 
-def bazel_repos(rules_foreign_cc = None, rules_pkg = None):
+def bazel_repos(rules_foreign_cc = None):
     maybe(
         http_archive_or_local,
         name = "rules_foreign_cc",
@@ -14,7 +14,3 @@ def bazel_repos(rules_foreign_cc = None, rules_pkg = None):
         strip_prefix = "rules_foreign_cc-0.8.0",
         url = "https://github.com/bazelbuild/rules_foreign_cc/archive/0.8.0.tar.gz",
     )
-
-    # rules_foreign_cc is now provided by MODULE.bazel
-
-    # rules_pkg is now provided by MODULE.bazel
