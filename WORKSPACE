@@ -40,7 +40,7 @@ load("//third_party/google:repos.bzl", "google_repos")
 google_repos()
 
 # Protobuf rules.
-load("//third_party/protobuf:repos.bzl", "protobuf_repos")
+
 
 # Various linters.
 load("//third_party/lint:repos.bzl", "lint_repos")
