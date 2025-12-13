@@ -34,23 +34,9 @@ go_repos()
 load("//third_party/go:deps.bzl", "go_deps")
 go_deps()
 
-# Google dependencies.
-# BoringSSL, RE2, GoogleTest, Protobuf Matchers, ABSL.
-# load("//third_party/google:repos.bzl", "google_repos")
-# google_repos()
-
-# Protobuf rules.
-
-
 # Various linters.
 load("//third_party/lint:repos.bzl", "lint_repos")
 lint_repos()
-
-# Foreign CC and packaging/release rules.
-load("//third_party/bazel:repos.bzl", "bazel_repos")
-bazel_repos()
-load("//third_party/bazel:deps.bzl", "bazel_deps")
-bazel_deps()
 
 # SoftHSM2.
 load("//third_party/softhsm2:repos.bzl", "softhsm2_repos")
@@ -70,10 +56,4 @@ vendor_repo_setup(
 )
 load("@vendor_setup//:repos.bzl", "vendor_repo")
 vendor_repo(name = "vendor_repo")
-
-
-bind(
-    name = "protocol_compiler",
-    actual = "@com_google_protobuf//:protoc",
-)
 
