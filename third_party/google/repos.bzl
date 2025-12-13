@@ -15,20 +15,20 @@ def google_repos(
         pbuf_matchers = None,
         absl = None):
     # BoringSSL.
-    http_archive_or_local(
-        name = "boringssl",
-        local = boringssl,
-        # Use github mirror instead of https://boringssl.googlesource.com/boringssl
-        # to obtain a boringssl archive with consistent sha256
-        sha256 = "534fa658bd845fd974b50b10f444d392dfd0d93768c4a51b61263fd37d851c40",
-        strip_prefix = "boringssl-b9232f9e27e5668bc0414879dcdedb2a59ea75f2",
-        urls = [
-            "https://storage.googleapis.com/grpc-bazel-mirror/github.com/google/boringssl/archive/b9232f9e27e5668bc0414879dcdedb2a59ea75f2.tar.gz",
-            "https://github.com/google/boringssl/archive/b9232f9e27e5668bc0414879dcdedb2a59ea75f2.tar.gz",
-        ],
-        patches = [Label("//third_party/google:boringssl-windows-constraints.patch")],
-        patch_args = ["-p1"],
-    )
+    # http_archive_or_local(
+    #     name = "boringssl",
+    #     local = boringssl,
+    #     # Use github mirror instead of https://boringssl.googlesource.com/boringssl
+    #     # to obtain a boringssl archive with consistent sha256
+    #     sha256 = "534fa658bd845fd974b50b10f444d392dfd0d93768c4a51b61263fd37d851c40",
+    #     strip_prefix = "boringssl-b9232f9e27e5668bc0414879dcdedb2a59ea75f2",
+    #     urls = [
+    #         "https://storage.googleapis.com/grpc-bazel-mirror/github.com/google/boringssl/archive/b9232f9e27e5668bc0414879dcdedb2a59ea75f2.tar.gz",
+    #         "https://github.com/google/boringssl/archive/b9232f9e27e5668bc0414879dcdedb2a59ea75f2.tar.gz",
+    #     ],
+    #     patches = [Label("//third_party/google:boringssl-windows-constraints.patch")],
+    #     patch_args = ["-p1"],
+    # )
 
     # Regular Expression Library.
     http_archive_or_local(
@@ -40,13 +40,13 @@ def google_repos(
     )
 
     # Googletest https://google.github.io/googletest/
-    http_archive_or_local(
-        name = "googletest",
-        local = googletest,
-        url = "https://github.com/google/googletest/archive/refs/tags/v{}.tar.gz".format(_GOOGLETEST_VERSION),
-        strip_prefix = "googletest-{}".format(_GOOGLETEST_VERSION),
-        sha256 = "8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7",
-    )
+    # http_archive_or_local(
+    #     name = "googletest",
+    #     local = googletest,
+    #     url = "https://github.com/google/googletest/archive/refs/tags/v{}.tar.gz".format(_GOOGLETEST_VERSION),
+    #     strip_prefix = "googletest-{}".format(_GOOGLETEST_VERSION),
+    #     sha256 = "8ad598c73ad796e0d8280b082cebd82a630d73e73cd3c70057938a6501bba5d7",
+    # )
 
     # Protobuf matchers for googletest.
     http_archive_or_local(
@@ -61,10 +61,10 @@ def google_repos(
     )
 
     # Abseil https://abseil.io/
-    http_archive_or_local(
-        name = "com_google_absl",
-        local = absl,
-        url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/{}.tar.gz".format(_ABSL_VERSION),
-        strip_prefix = "abseil-cpp-{}".format(_ABSL_VERSION),
-        sha256 = "3ea49a7d97421b88a8c48a0de16c16048e17725c7ec0f1d3ea2683a2a75adc21",
-    )
+    # http_archive_or_local(
+    #     name = "com_google_absl",
+    #     local = absl,
+    #     url = "https://github.com/abseil/abseil-cpp/archive/refs/tags/{}.tar.gz".format(_ABSL_VERSION),
+    #     strip_prefix = "abseil-cpp-{}".format(_ABSL_VERSION),
+    #     sha256 = "3ea49a7d97421b88a8c48a0de16c16048e17725c7ec0f1d3ea2683a2a75adc21",
+    # )
