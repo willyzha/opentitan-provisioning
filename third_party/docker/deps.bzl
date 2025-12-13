@@ -18,8 +18,22 @@ def docker_deps():
     )
 
     repositories()
-    deps()
-    _go_image_repos()
+    # deps()
+    # _go_image_repos()
+
+    container_pull(
+        name = "go_image_base",
+        registry = "gcr.io",
+        repository = "distroless/base",
+        tag = "debug",
+    )
+
+    container_pull(
+        name = "go_image_static",
+        registry = "gcr.io",
+        repository = "distroless/static",
+        tag = "latest",
+    )
 
     container_pull(
         name = "container_k8s_pause",

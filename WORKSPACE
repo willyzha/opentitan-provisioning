@@ -29,10 +29,10 @@ crt_register_toolchains(
 
 # Go dependencies.
 # gazelle:repository_macro third_party/go/deps.bzl%go_packages_
-load("//third_party/go:repos.bzl", "go_repos")
-go_repos()
-load("//third_party/go:deps.bzl", "go_deps")
-go_deps()
+# load("//third_party/go:repos.bzl", "go_repos")
+# go_repos()
+# load("//third_party/go:deps.bzl", "go_deps")
+# go_deps()
 
 # Various linters.
 load("//third_party/lint:repos.bzl", "lint_repos")
