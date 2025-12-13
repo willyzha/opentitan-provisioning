@@ -222,3 +222,16 @@ http_archive(
     strip_prefix = "protobuf-matchers-7c8e15741bcea83db7819cc472c3e96301a95158",
     urls = ["https://github.com/inazarenko/protobuf-matchers/archive/7c8e15741bcea83db7819cc472c3e96301a95158.zip"],
 )
+
+http_archive(
+    name = "softhsm2",
+    build_file = "//third_party/softhsm2:BUILD.softhsm2.bazel",
+    patch_args = ["-p1"],
+    patches = [
+        "//util/containers/softhsm2:0001-Disable-filename-logging.patch",
+        "//patches:softhsm2_include_time.patch",
+    ],
+    sha256 = "72cf979ec4f74ca4555861dcae45cf7d1b667cc2e4f3ee3fb26e6ff1b99aec95",
+    strip_prefix = "SoftHSMv2-4975c0df4c7090e97a3860ae21079a9597cfedc6",
+    urls = ["https://github.com/opendnssec/SoftHSMv2/archive/4975c0df4c7090e97a3860ae21079a9597cfedc6.tar.gz"],
+)
