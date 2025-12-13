@@ -36,8 +36,8 @@ go_deps()
 
 # Google dependencies.
 # BoringSSL, RE2, GoogleTest, Protobuf Matchers, ABSL.
-load("//third_party/google:repos.bzl", "google_repos")
-google_repos()
+# load("//third_party/google:repos.bzl", "google_repos")
+# google_repos()
 
 # Protobuf rules.
 
