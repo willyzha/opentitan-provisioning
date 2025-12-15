@@ -214,6 +214,89 @@
   },
   "selectedYankedVersions": {},
   "moduleExtensions": {
+    "//third_party/docker:extensions.bzl%docker_extension": {
+      "general": {
+        "bzlTransitiveDigest": "pgIGuGr+lTSooHx96F4w4m5BWhpZSceWF2BGwtO7cT4=",
+        "usagesDigest": "VYIeuqq2RcpK9v+2LusgPq3P4tF0VmRk+yV2FG0ceVY=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "container_softhsm2": {
+            "bzlFile": "@@_main~_repo_rules~io_bazel_rules_docker//container:pull.bzl",
+            "ruleClassName": "container_pull",
+            "attributes": {
+              "registry": "us-docker.pkg.dev/opentitan/opentitan-public",
+              "repository": "ot-prov-softhsm2",
+              "digest": "sha256:b7da668a27ffe47a7da34a476bbb2acf59ac390cb9f7b166d76aa437c61088d6",
+              "tag": "latest"
+            }
+          },
+          "container_k8s_pause": {
+            "bzlFile": "@@_main~_repo_rules~io_bazel_rules_docker//container:pull.bzl",
+            "ruleClassName": "container_pull",
+            "attributes": {
+              "registry": "k8s.gcr.io",
+              "repository": "pause",
+              "digest": "sha256:369201a612f7b2b585a8e6ca99f77a36bcdbd032463d815388a96800b63ef2c8",
+              "tag": "3.5"
+            }
+          },
+          "go_image_static": {
+            "bzlFile": "@@_main~_repo_rules~io_bazel_rules_docker//container:pull.bzl",
+            "ruleClassName": "container_pull",
+            "attributes": {
+              "registry": "gcr.io",
+              "repository": "distroless/static",
+              "tag": "latest"
+            }
+          },
+          "go_image_base": {
+            "bzlFile": "@@_main~_repo_rules~io_bazel_rules_docker//container:pull.bzl",
+            "ruleClassName": "container_pull",
+            "attributes": {
+              "registry": "gcr.io",
+              "repository": "distroless/base",
+              "tag": "debug"
+            }
+          },
+          "docker_config": {
+            "bzlFile": "@@_main~_repo_rules~io_bazel_rules_docker//toolchains/docker:toolchain.bzl",
+            "ruleClassName": "toolchain_configure",
+            "attributes": {
+              "docker_path": "/usr/bin/podman"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "io_bazel_rules_docker",
+            "_main~_repo_rules~io_bazel_rules_docker"
+          ],
+          [
+            "_main~_repo_rules~io_bazel_rules_docker",
+            "go_puller_darwin",
+            "go_puller_darwin"
+          ],
+          [
+            "_main~_repo_rules~io_bazel_rules_docker",
+            "go_puller_linux_amd64",
+            "_main~_repo_rules~go_puller_linux_amd64"
+          ],
+          [
+            "_main~_repo_rules~io_bazel_rules_docker",
+            "go_puller_linux_arm64",
+            "go_puller_linux_arm64"
+          ],
+          [
+            "_main~_repo_rules~io_bazel_rules_docker",
+            "go_puller_linux_s390x",
+            "go_puller_linux_s390x"
+          ]
+        ]
+      }
+    },
     "@@apple_support~//crosstool:setup.bzl%apple_cc_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "7ii+gFxWSxHhQPrBxfMEHhtrGvHmBTvsh+KOyGunP/s=",
@@ -8765,7 +8848,7 @@
         "recordedFileInputs": {
           "@@lowrisc_opentitan~//third_party/rust/Cargo.toml": "0ee40cf528f3ae57d9b0e5e27da36bff6dbd4e4baaef912a4278d2357d7a2686",
           "@@lowrisc_opentitan~//third_party/tock/Cargo.toml": "5a939bd934aef4775b65a82e678f1180ec00aa78cf214f6052cc82353c975cc4",
-          "@@//MODULE.bazel": "97b8c5dda3b1fb3b95c3dd6ce6f59eefd7ad6daa6b3ec0465c9b7f07ab64c7a6",
+          "@@//MODULE.bazel": "a2809071351df3fd3d0f0b386375dffc2c5d394b1c629cdd929cb8656dc76f66",
           "@@lowrisc_opentitan~//third_party/rust/Cargo.lock": "1174b96ea73bc0976bad76e658fd1445510788585e34c4cafa9f0d61f535e2bf",
           "@@lowrisc_opentitan~//third_party/tock/Cargo.lock": "b5a7a833ae205f1e3697a510e97e3185b44b195d7a22879b4669bff95febd5c8",
           "@@rules_rust~~rust_host_tools~rust_host_tools//WORKSPACE.bazel": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
