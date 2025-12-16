@@ -22,13 +22,3 @@ crt_register_toolchains(
 # Various linters.
 load("//third_party/lint:repos.bzl", "lint_repos")
 lint_repos()
-
-# Setup for linking in externally vendor customizations.
-load("//rules:vendor.bzl", "vendor_repo_setup")
-vendor_repo_setup(
-    name = "vendor_setup",
-    dummy = "src/vendor",
-)
-load("@vendor_setup//:repos.bzl", "vendor_repo")
-vendor_repo(name = "vendor_repo")
-

@@ -287,3 +287,6 @@ docker = use_extension("//third_party/docker:extensions.bzl", "docker_extension"
 use_repo(docker, "container_k8s_pause", "container_softhsm2", "docker_config", "go_image_base", "go_image_static")
 
 register_toolchains("//config/containers:docker_toolchain")
+
+vendor_deps = use_extension("//rules:vendor.bzl", "vendor_deps")
+use_repo(vendor_deps, "vendor_repo")
