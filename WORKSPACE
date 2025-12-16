@@ -18,13 +18,3 @@ crt_register_toolchains(
     win32 = True,
     win64 = True,
 )
-
-# Setup for linking in externally vendor customizations.
-load("//rules:vendor.bzl", "vendor_repo_setup")
-vendor_repo_setup(
-    name = "vendor_setup",
-    dummy = "src/vendor",
-)
-load("@vendor_setup//:repos.bzl", "vendor_repo")
-vendor_repo(name = "vendor_repo")
-
