@@ -216,7 +216,7 @@
   "moduleExtensions": {
     "//third_party/docker:extensions.bzl%docker_extension": {
       "general": {
-        "bzlTransitiveDigest": "pgIGuGr+lTSooHx96F4w4m5BWhpZSceWF2BGwtO7cT4=",
+        "bzlTransitiveDigest": "E0pLp4ZIl67o9GMedFgOpF9IM0vsPggbzsQbhU5yGBk=",
         "usagesDigest": "VYIeuqq2RcpK9v+2LusgPq3P4tF0VmRk+yV2FG0ceVY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
