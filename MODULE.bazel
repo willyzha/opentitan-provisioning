@@ -4,6 +4,19 @@
 
 module(name = "lowrisc_opentitan_provisioning")
 
+# -------------------------------------------------------------------------
+# Toolchains
+# -------------------------------------------------------------------------
+
+# LLVM Toolchain: Used for compiling C/C++ code.
+# We pin to version 1.1.2 and apply a patch to avoid root user check failures in CI.
+bazel_dep(name = "toolchains_llvm", version = "1.1.2")
+single_version_override(
+    module_name = "toolchains_llvm",
+    patch_strip = 0,
+    patches = ["patches/toolchains_llvm_no_root_check.patch"],
+)
+
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
 llvm.toolchain(
     name = "llvm_toolchain_host",
@@ -14,21 +27,91 @@ use_repo(llvm, "llvm_toolchain_host")
 
 register_toolchains("@llvm_toolchain_host//:all")
 
-# Dependencies:
-bazel_dep(name = "abseil-cpp", version = "20240116.1", repo_name = "com_google_absl")
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "googletest", version = "1.14.0.bcr.1", repo_name = "com_google_googletest")
-bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_cc", version = "0.1.2")
-bazel_dep(name = "rules_fuzzing", version = "0.5.2")
-bazel_dep(name = "rules_pkg", version = "1.0.1")
-bazel_dep(name = "rules_proto", version = "6.0.2")
+# Python Toolchain: Used for Python scripts and tests.
+bazel_dep(name = "rules_python", version = "1.2.0")
+single_version_override(
+    module_name = "rules_python",
+    patch_strip = 0,
+    patches = ["patches/rules_python_force_pypi.patch"],
+    version = "1.2.0",
+)
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    # Required because CI containers currently run as the `root` user.
+    # We lose caching of `.pyc` files as a result.
+    # See <https://github.com/bazelbuild/rules_python/pull/713>.
+    ignore_root_user_error = True,
+    is_default = True,
+    python_version = "3.9",
+)
+use_repo(python, "pythons_hub")
+
+register_toolchains("@pythons_hub//:all")
+
+# We occasionally access the toolchain repositories directly to use interpreters.
+use_repo(python, python3 = "python_3_9", python3_host = "python_3_9_host")
+
+# Rust Toolchain: Used for Rust code.
 bazel_dep(name = "rules_rust", version = "0.59.2")
 
-# Explicitly add re2 (already transitive via grpc/googletest)
-bazel_dep(name = "re2", version = "2023-09-01", repo_name = "com_googlesource_code_re2")
+# Patch rules_rust_bindgen to allow header-only libs.
+single_version_override(
+    module_name = "rules_rust_bindgen",
+    patch_strip = 0,
+    patches = [
+        "patches/rules_rust.bindgen_static_lib.patch",
+    ],
+    version = "0.59.2",
+)
 
-# Use a modern gRPC (compatible with Protobuf 27+)
+# Patch rules_rust for toolchain paths.
+single_version_override(
+    module_name = "rules_rust",
+    patch_strip = 0,
+    patches = [
+        "patches/rules_rust.extra_rustc_toolchain_dirs.patch",
+    ],
+    version = "0.59.2",
+)
+
+register_toolchains("@lowrisc_opentitan//third_party/rust:bindgen_toolchain")
+
+# Go Toolchain: Used for Go code.
+bazel_dep(name = "rules_go", version = "0.42.0", repo_name = "io_bazel_rules_go")
+single_version_override(
+    module_name = "rules_go",
+    version = "0.42.0",
+)
+
+go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.download(version = "1.21.0")
+use_repo(go_sdk, "go_default_sdk")
+
+register_toolchains("@go_default_sdk//:all")
+
+# -------------------------------------------------------------------------
+# Core Dependencies
+# -------------------------------------------------------------------------
+
+# Abseil C++: Common library used by gRPC, Protobuf, and GoogleTest.
+bazel_dep(name = "abseil-cpp", version = "20240116.1", repo_name = "com_google_absl")
+
+# Bazel Skylib: Standard library for Bazel Starlark rules.
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
+
+# GoogleTest: C++ testing framework.
+bazel_dep(name = "googletest", version = "1.14.0.bcr.1", repo_name = "com_google_googletest")
+
+# Platforms: Platform definitions for Bazel.
+bazel_dep(name = "platforms", version = "0.0.11")
+
+# Protocol Buffers: Serialization format.
+# Pinned to ensure compatibility with gRPC and OpenTitan.
+bazel_dep(name = "protobuf", version = "27.3", repo_name = "com_google_protobuf")
+
+# gRPC: RPC framework.
+# Pinned to 1.66.0 and patched for Windows support.
 bazel_dep(name = "grpc", version = "1.66.0.bcr.3", repo_name = "com_github_grpc_grpc")
 single_version_override(
     module_name = "grpc",
@@ -39,34 +122,48 @@ single_version_override(
     ],
 )
 
-# Pin Protobuf explicitly to ensure sync
-bazel_dep(name = "protobuf", version = "27.3", repo_name = "com_google_protobuf")
+# RE2: Regular expression library.
+# Explicitly added to sync versions (transitive via gRPC/GoogleTest).
+bazel_dep(name = "re2", version = "2023-09-01", repo_name = "com_googlesource_code_re2")
 
-# Explicitly add upb (required by gRPC 1.66+ in Bzlmod)
+# upb: Micro protobuf library, required by gRPC 1.66+ in Bzlmod.
 bazel_dep(name = "upb", version = "0.0.0-20230907-e7430e6")
+
+# -------------------------------------------------------------------------
+# Rulesets
+# -------------------------------------------------------------------------
+
+# C++ Rules: Standard C++ rules.
+bazel_dep(name = "rules_cc", version = "0.1.2")
+
+# Fuzzing Rules: For fuzz testing.
+bazel_dep(name = "rules_fuzzing", version = "0.5.2")
+
+# Packaging Rules: For creating packages (tar, deb, etc.).
+bazel_dep(name = "rules_pkg", version = "1.0.1")
+
+# Proto Rules: Standard Proto rules.
+bazel_dep(name = "rules_proto", version = "6.0.2")
+
+# Foreign CC Rules: For building non-Bazel C/C++ projects (like CMake/Make).
 bazel_dep(name = "rules_foreign_cc", version = "0.9.0")
 single_version_override(
     module_name = "rules_foreign_cc",
     version = "0.9.0",
 )
 
+# Apple Rules: Required transitively by gRPC (and potential macOS builds).
 bazel_dep(name = "rules_apple", version = "3.5.1", repo_name = "build_bazel_rules_apple")
-bazel_dep(name = "rules_swift", version = "1.18.0", repo_name = "build_bazel_rules_swift")
-bazel_dep(name = "rules_go", version = "0.42.0", repo_name = "io_bazel_rules_go")
-single_version_override(
-    module_name = "rules_go",
-    version = "0.42.0",
-)
 
+# Swift Rules: Required transitively by rules_apple.
+bazel_dep(name = "rules_swift", version = "1.18.0", repo_name = "build_bazel_rules_swift")
+
+# Gazelle: Tool to generate Bazel build files for Go (and others).
 bazel_dep(name = "gazelle", version = "0.35.0", repo_name = "bazel_gazelle")
 
-go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk")
-go_sdk.download(version = "1.21.0")
-
-# Register the Go toolchain
-use_repo(go_sdk, "go_default_sdk")
-
-register_toolchains("@go_default_sdk//:all")
+# -------------------------------------------------------------------------
+# Go Dependencies
+# -------------------------------------------------------------------------
 
 go_deps = use_extension("@bazel_gazelle//:extensions.bzl", "go_deps")
 go_deps.from_file(go_mod = "//:go.mod")
@@ -113,6 +210,10 @@ use_repo(
     "org_modernc_sqlite",
 )
 
+# -------------------------------------------------------------------------
+# Rust Dependencies
+# -------------------------------------------------------------------------
+
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(
     name = "provisioning_index",
@@ -122,36 +223,12 @@ crate.from_cargo(
 )
 use_repo(crate, crate_index = "provisioning_index")
 
-# Dev dependencies:
-bazel_dep(
-    name = "buildifier_prebuilt",
-    version = "6.4.0",
-    dev_dependency = True,
-)
-bazel_dep(
-    name = "lowrisc_misc_linters",
-    dev_dependency = True,
-)
+# -------------------------------------------------------------------------
+# OpenTitan & Project Specific
+# -------------------------------------------------------------------------
 
-bazel_dep(
-    name = "lowrisc_opentitan",
-)
-
-archive_override(
-    module_name = "lowrisc_misc_linters",
-    integrity = "sha256-Nl/mfYFo/uGg/DrqS7gFiL9yHcT8g7QEY7CetQiXzaM=",
-    strip_prefix = "misc-linters-20240823_01",
-    urls = ["https://github.com/lowRISC/misc-linters/archive/refs/tags/20240823_01.tar.gz"],
-)
-
-# Depend on the version OpenTitan expects
-bazel_dep(name = "toolchains_llvm", version = "1.1.2")
-single_version_override(
-    module_name = "toolchains_llvm",
-    patch_strip = 0,
-    patches = ["patches/toolchains_llvm_no_root_check.patch"],
-)
-
+# OpenTitan Repository: Provides hardware definitions and other utilities.
+bazel_dep(name = "lowrisc_opentitan")
 archive_override(
     module_name = "lowrisc_opentitan",
     integrity = "sha256-dlAOmYr6B0VvdsvDoDQkM1GM3Fc9qYxgmEnXQG+d07k=",
@@ -161,58 +238,30 @@ archive_override(
     urls = ["https://github.com/lowRISC/opentitan/archive/refs/tags/Earlgrey-A2-Orchestrator-RC4.tar.gz"],
 )
 
-bazel_dep(name = "rules_python", version = "1.2.0")
-single_version_override(
-    module_name = "rules_python",
-    patch_strip = 0,
-    patches = ["patches/rules_python_force_pypi.patch"],
-    version = "1.2.0",
+# Development Dependencies
+bazel_dep(
+    name = "buildifier_prebuilt",
+    version = "6.4.0",
+    dev_dependency = True,
+)
+bazel_dep(
+    name = "lowrisc_misc_linters",
+    dev_dependency = True,
+)
+archive_override(
+    module_name = "lowrisc_misc_linters",
+    integrity = "sha256-Nl/mfYFo/uGg/DrqS7gFiL9yHcT8g7QEY7CetQiXzaM=",
+    strip_prefix = "misc-linters-20240823_01",
+    urls = ["https://github.com/lowRISC/misc-linters/archive/refs/tags/20240823_01.tar.gz"],
 )
 
-# Python toolchain:
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(
-    # Required because CI containers currently run as the `root` user.
-    # We lose caching of `.pyc` files as a result.
-    # See <https://github.com/bazelbuild/rules_python/pull/713>.
-    ignore_root_user_error = True,
-    is_default = True,
-    python_version = "3.9",
-)
-use_repo(python, "pythons_hub")
-
-register_toolchains("@pythons_hub//:all")
-
-# We occasionally access the toolchain repositories directly to use interpreters.
-use_repo(python, python3 = "python_3_9", python3_host = "python_3_9_host")
-
-# OpenTitan Required Overrides
-# Dependency overrides are ignored in transitive dependencies.
-
-# Patch rules_rust_bindgen to allow header-only libs
-single_version_override(
-    module_name = "rules_rust_bindgen",
-    patch_strip = 0,
-    patches = [
-        "patches/rules_rust.bindgen_static_lib.patch",
-    ],
-    version = "0.59.2",
-)
-
-# Patch rules_rust for toolchain paths
-single_version_override(
-    module_name = "rules_rust",
-    patch_strip = 0,
-    patches = [
-        "patches/rules_rust.extra_rustc_toolchain_dirs.patch",
-    ],
-    version = "0.59.2",
-)
-
-register_toolchains("@lowrisc_opentitan//third_party/rust:bindgen_toolchain")
+# -------------------------------------------------------------------------
+# Legacy Repository Rules (Not yet available in Registry)
+# -------------------------------------------------------------------------
 
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+# Protobuf Matchers: Matchers for testing Protobufs.
 http_archive(
     name = "com_github_protobuf_matchers",
     build_file_content = 'package(default_visibility = ["//visibility:public"])',
@@ -223,6 +272,7 @@ http_archive(
     urls = ["https://github.com/inazarenko/protobuf-matchers/archive/7c8e15741bcea83db7819cc472c3e96301a95158.zip"],
 )
 
+# SoftHSM2: Software Hardware Security Module.
 http_archive(
     name = "softhsm2",
     build_file = "//third_party/softhsm2:BUILD.softhsm2.bazel",
@@ -236,6 +286,7 @@ http_archive(
     urls = ["https://github.com/opendnssec/SoftHSMv2/archive/4975c0df4c7090e97a3860ae21079a9597cfedc6.tar.gz"],
 )
 
+# Docker Rules: For container builds (legacy, not yet fully Bzlmod).
 http_archive(
     name = "io_bazel_rules_docker",
     sha256 = "59536e6ae64359b716ba9c46c39183403b01eabfbd57578e84398b4829ca499a",
@@ -245,8 +296,7 @@ http_archive(
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
 
-# Manually pulling in transitive dependencies for rules_docker
-# because it does not support bzlmod yet.
+# Manually pulling in transitive dependencies for rules_docker.
 http_file(
     name = "go_puller_linux_amd64",
     executable = True,
@@ -268,6 +318,7 @@ http_archive(
     urls = ["https://github.com/google/containerregistry/archive/v0.0.38.tar.gz"],
 )
 
+# Release tools.
 http_archive(
     name = "lowrisc_bazel_release",
     sha256 = "c7b0cbdec0a1081a0b0a52eb1ebd942e7eaa218408008661fdb6e8ec3b441a4a",
@@ -287,6 +338,10 @@ docker = use_extension("//third_party/docker:extensions.bzl", "docker_extension"
 use_repo(docker, "container_k8s_pause", "container_softhsm2", "docker_config", "go_image_base", "go_image_static")
 
 register_toolchains("//config/containers:docker_toolchain")
+
+# -------------------------------------------------------------------------
+# Vendor Dependencies
+# -------------------------------------------------------------------------
 
 vendor_deps = use_extension("//rules:vendor.bzl", "vendor_deps")
 use_repo(vendor_deps, "vendor_repo")
