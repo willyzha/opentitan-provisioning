@@ -33,3 +33,19 @@ bazelisk run //src/pa:loadtest -- \
    --total_duts=10
 echo "Done."
 
+# Run the PA MLDSA loadtest.
+echo "Running PA MLDSA loadtest ..."
+bazelisk run //src/pa:mldsa_loadtest -- \
+   --ca_root_certs=${DEPLOYMENT_DIR}/certs/out/ca-cert.pem \
+   --client_cert="${DEPLOYMENT_DIR}/certs/out/ate-client-cert.pem" \
+   --client_key="${DEPLOYMENT_DIR}/certs/out/ate-client-key.pem" \
+   --enable_tls=true \
+   --hsm_so="${HSMTOOL_MODULE}" \
+   --pa_address="${OTPROV_DNS_PA}:${OTPROV_PORT_PA}" \
+   --parallel_clients=5 \
+   --sku_auth="test_password" \
+   --sku_names="${SKU_NAMES}" \
+   --spm_config_dir="${DEPLOYMENT_DIR}/spm" \
+   --total_duts=10
+echo "Done."
+
