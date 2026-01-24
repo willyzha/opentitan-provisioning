@@ -801,7 +801,12 @@ def _hsm_certgen_script_impl(ctx):
         is_executable = True,
     )
 
+    outfiles = [
+        ctx.executable._hsmtool,
+    ]
+
     return DefaultInfo(
+        runfiles = ctx.runfiles(files = outfiles),
         executable = out_file,
     )
 
@@ -815,6 +820,12 @@ hsm_certgen_script = rule(
         "_runner_ca_sign": attr.label(
             default = "//rules/scripts:hsm_ca_sign.sh",
             allow_single_file = True,
+        ),
+        "_hsmtool": attr.label(
+            default = "//third_party/hsmtool",
+            allow_single_file = True,
+            cfg = "exec",
+            executable = True,
         ),
     },
     executable = True,
@@ -1085,6 +1096,34 @@ def hsm_certificate_authority_intermediate(name, curve):
             wrapping = False,
         ),
         type = "ecdsa",
+    )
+
+def hsm_certificate_authority_intermediate_mldsa(name):
+    hsm_key_template(
+        name = name,
+        export_public_only = True,
+        import_template_public = hsmtool_pk11_attrs({
+            "CKA_VERIFY": True,
+            "CKA_TOKEN": True,
+        }),
+        keygen_params = hsmtool_mldsa_keygen(
+            extractable = False,
+            label = name,
+            private_template = {
+                "CKA_LABEL": name + ".priv",
+                "CKA_SIGN": True,
+                "CKA_TOKEN": True,
+                "CKA_EXTRACTABLE": False,
+                "CKA_SENSITIVE": True,
+            },
+            public_template = {
+                "CKA_LABEL": name + ".pub",
+                "CKA_VERIFY": True,
+                "CKA_TOKEN": True,
+            },
+            wrapping = False,
+        ),
+        type = "mldsa",
     )
 
 def hsm_generic_secret(name, wrapping_key, wrapping_mechanism):

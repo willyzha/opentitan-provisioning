@@ -56,5 +56,6 @@ filegroup(
         ":spm_init",
         "//config/spm/sku/eg:eg_release",
         "//config/spm/sku/sival:release",
+        "//config/spm/sku/sival_mldsa:release",
     ],
 )

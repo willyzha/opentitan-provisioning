@@ -15,7 +15,7 @@ cd "$(dirname "$0")/.."
 # Build and deploy the provisioning infrastructure.
 source util/integration_test_setup.sh
 
-SKU_NAMES="sival,cr01,pi01,ti01"
+SKU_NAMES="sival_mldsa"
 
 # Run the PA MLDSA loadtest.
 echo "Running PA MLDSA loadtest ..."
