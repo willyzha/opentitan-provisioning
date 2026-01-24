@@ -220,11 +220,21 @@ single_version_override(
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(
     name = "provisioning_index",
-    cargo_lockfile = "@lowrisc_opentitan//third_party/rust:Cargo.lock",
-    manifests = ["@lowrisc_opentitan//third_party/rust:Cargo.toml"],
+    cargo_lockfile = "//third_party/rust:Cargo.lock",
+    manifests = ["//third_party/rust:Cargo.toml"],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )
-use_repo(crate, "crate_index", "provisioning_index")
+crate.annotation(
+    crate = "cryptoki-sys",
+    additive_build_file_content = """
+filegroup(
+    name = "cryptoki-sys-binding-srcs",
+    srcs = glob(["src/bindings/*.rs"]),
+    visibility = ["//visibility:public"],
+)
+""",
+)
+use_repo(crate, crate_index = "provisioning_index")
 register_toolchains("@lowrisc_opentitan//third_party/rust:bindgen_toolchain")
 
 # -------------------------------------------------------------------------

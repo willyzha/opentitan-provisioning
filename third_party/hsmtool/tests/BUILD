@@ -13,19 +13,20 @@ sh_test(
     name = "token_exists_test",
     srcs = ["hsmtool_runner.sh"],
     args = [
-        "--module=$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+        "--module=$(rootpath @softhsm2//:softhsm_lib)",
         "--token=fake_keys",
         "token",
         "list",
     ],
     data = [
-        "//signing/softhsm",
-        "//signing/softhsm:conf",
-        "//sw/host/hsmtool",
+        "@lowrisc_opentitan//signing/softhsm",
+        "@lowrisc_opentitan//signing/softhsm:conf",
+        "//third_party/hsmtool",
         "@softhsm2//:gen_dir",
+        "@softhsm2//:softhsm_lib",
     ],
     env = {
-        "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+        "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
     },
 )
 
@@ -44,24 +45,25 @@ sh_test(
     srcs = ["ot_hsm_runner.sh"],
     data = [
         ":tqbf_digest",
-        "//signing/softhsm",
-        "//signing/softhsm:conf",
-        "//sw/device/silicon_creator/lib/ownership/keys/fake:ecdsa_keyset",
-        "//sw/host/hsmtool",
-        "//sw/host/opentitantool",
+        "@lowrisc_opentitan//signing/softhsm",
+        "@lowrisc_opentitan//signing/softhsm:conf",
+        "@lowrisc_opentitan//sw/device/silicon_creator/lib/ownership/keys/fake:ecdsa_keyset",
+        "//third_party/hsmtool",
+        "@lowrisc_opentitan//sw/host/opentitantool",
         "@softhsm2//:gen_dir",
+        "@softhsm2//:softhsm_lib",
     ],
     env = {
-        "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+        "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
         "FIRST": "opentitantool",
         "OTTOOL_ARGS": """
             --rcfile=
             ecdsa sign
-                sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.der
+                external/lowrisc_opentitan/sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.der
                 --input=$(rootpath :tqbf_digest)
                 --output=tqbf.ecdsa_sig
         """,
-        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:softhsm_lib)",
         "HSMTOOL_ARGS": """
             -t fake_keys -u user -p 123456
             ecdsa verify
@@ -81,24 +83,25 @@ sh_test(
     data = [
         "tqbf.txt",
         ":tqbf_digest",
-        "//signing/softhsm",
-        "//signing/softhsm:conf",
-        "//sw/device/silicon_creator/lib/ownership/keys/fake:app_prod_ecdsa_pub",
-        "//sw/host/hsmtool",
-        "//sw/host/opentitantool",
+        "@lowrisc_opentitan//signing/softhsm",
+        "@lowrisc_opentitan//signing/softhsm:conf",
+        "@lowrisc_opentitan//sw/device/silicon_creator/lib/ownership/keys/fake:app_prod_ecdsa_pub",
+        "//third_party/hsmtool",
+        "@lowrisc_opentitan//sw/host/opentitantool",
         "@softhsm2//:gen_dir",
+        "@softhsm2//:softhsm_lib",
     ],
     env = {
-        "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+        "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
         "FIRST": "hsmtool",
         "OTTOOL_ARGS": """
             --rcfile=
             ecdsa verify
                 --digest-file=$(rootpath :tqbf_digest)
                 --signature-file=tqbf.ecdsa_sig
-                sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.pub.der
+                external/lowrisc_opentitan/sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.pub.der
         """,
-        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:softhsm_lib)",
         # This hsmtool invocation computes the digest from the plain-text `tqbf.txt` input file.
         "HSMTOOL_ARGS": """
             -t fake_keys -u user -p 123456
@@ -107,7 +110,7 @@ sh_test(
                 --format=plain-text
                 --label=fake_app_prod_ecdsa
                 --output=tqbf.ecdsa_sig
-                sw/host/hsmtool/tests/tqbf.txt
+                third_party/hsmtool/tests/tqbf.txt
         """,
     },
     deps = [":test_lib"],
@@ -138,28 +141,29 @@ _SPX_TESTS = {
         srcs = ["ot_hsm_runner.sh"],
         data = [
             ":tqbf_digest",
-            "//signing/softhsm",
-            "//signing/softhsm:conf",
-            "//sw/device/silicon_creator/lib/ownership/keys/fake:spx_keyset",
-            "//sw/host/hsmtool",
-            "//sw/host/opentitantool",
+            "@lowrisc_opentitan//signing/softhsm",
+            "@lowrisc_opentitan//signing/softhsm:conf",
+            "@lowrisc_opentitan//sw/device/silicon_creator/lib/ownership/keys/fake:spx_keyset",
+            "//third_party/hsmtool",
+            "@lowrisc_opentitan//sw/host/opentitantool",
             "@softhsm2//:gen_dir",
+            "@softhsm2//:softhsm_lib",
         ],
         env = {
-            "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+            "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
             "FIRST": "opentitantool",
             "OTTOOL_ARGS": """
                 --rcfile=
                 spx sign {rev_flag}
                     --domain={domain}
                     $(rootpath :tqbf_digest)
-                    sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_spx.pem
+                    external/lowrisc_opentitan/sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_spx.pem
                     --output=tqbf.spx_sig
             """.format(
                 domain = param["domain"],
                 rev_flag = param["rev_flag"],
             ),
-            "HSMTOOL_MODULE": "$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+            "HSMTOOL_MODULE": "$(rootpath @softhsm2//:softhsm_lib)",
             "HSMTOOL_SPX_MODULE": "pkcs11-ef",
             "HSMTOOL_ARGS": """
                 -t fake_keys -u user -p 123456
@@ -186,28 +190,29 @@ _SPX_TESTS = {
         srcs = ["ot_hsm_runner.sh"],
         data = [
             ":tqbf_digest",
-            "//signing/softhsm",
-            "//signing/softhsm:conf",
-            "//sw/device/silicon_creator/lib/ownership/keys/fake:spx_keyset",
-            "//sw/host/hsmtool",
-            "//sw/host/opentitantool",
+            "@lowrisc_opentitan//signing/softhsm",
+            "@lowrisc_opentitan//signing/softhsm:conf",
+            "@lowrisc_opentitan//sw/device/silicon_creator/lib/ownership/keys/fake:spx_keyset",
+            "//third_party/hsmtool",
+            "@lowrisc_opentitan//sw/host/opentitantool",
             "@softhsm2//:gen_dir",
+            "@softhsm2//:softhsm_lib",
         ],
         env = {
-            "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+            "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
             "FIRST": "hsmtool",
             "OTTOOL_ARGS": """
                 --rcfile=
                 spx verify {rev_flag}
                     --domain={domain}
-                    sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_spx.pem
+                    external/lowrisc_opentitan/sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_spx.pem
                     $(rootpath :tqbf_digest)
                     tqbf.spx_sig
             """.format(
                 domain = param["domain"],
                 rev_flag = param["rev_flag"],
             ),
-            "HSMTOOL_MODULE": "$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+            "HSMTOOL_MODULE": "$(rootpath @softhsm2//:softhsm_lib)",
             "HSMTOOL_SPX_MODULE": "pkcs11-ef",
             "HSMTOOL_ARGS": """
                 -t fake_keys -u user -p 123456
@@ -258,7 +263,7 @@ sh_test(
     data = [
         ":image_bin",
         ":image_digest",
-        "//sw/host/opentitantool",
+        "@lowrisc_opentitan//sw/host/opentitantool",
     ],
     env = {
         "IMAGE_BIN": "$(rootpath :image_bin)",
@@ -273,24 +278,25 @@ sh_test(
     srcs = ["ot_hsm_runner.sh"],
     data = [
         ":image_bin",
-        "//signing/softhsm",
-        "//signing/softhsm:conf",
-        "//sw/device/silicon_creator/lib/ownership/keys/fake:ecdsa_keyset",
-        "//sw/host/hsmtool",
-        "//sw/host/opentitantool",
+        "@lowrisc_opentitan//signing/softhsm",
+        "@lowrisc_opentitan//signing/softhsm:conf",
+        "@lowrisc_opentitan//sw/device/silicon_creator/lib/ownership/keys/fake:ecdsa_keyset",
+        "//third_party/hsmtool",
+        "@lowrisc_opentitan//sw/host/opentitantool",
         "@softhsm2//:gen_dir",
+        "@softhsm2//:softhsm_lib",
     ],
     env = {
-        "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+        "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
         "FIRST": "opentitantool",
         "OTTOOL_ARGS": """
             --rcfile=
             image manifest update
-                --ecdsa-key=sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.der
+                --ecdsa-key=external/lowrisc_opentitan/sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.der
                 --output=image.signed_bin
                 $(rootpath :image_bin)
         """,
-        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:softhsm_lib)",
         "HSMTOOL_ARGS": """
             -t fake_keys -u user -p 123456
             ecdsa verify
@@ -310,19 +316,20 @@ sh_test(
     srcs = ["ot_hsm_runner.sh"],
     data = [
         ":image_bin",
-        "//signing/softhsm",
-        "//signing/softhsm:conf",
-        "//sw/device/silicon_creator/lib/ownership/keys/fake:app_prod_ecdsa_pub",
-        "//sw/host/hsmtool",
-        "//sw/host/opentitantool",
+        "@lowrisc_opentitan//signing/softhsm",
+        "@lowrisc_opentitan//signing/softhsm:conf",
+        "@lowrisc_opentitan//sw/device/silicon_creator/lib/ownership/keys/fake:app_prod_ecdsa_pub",
+        "//third_party/hsmtool",
+        "@lowrisc_opentitan//sw/host/opentitantool",
         "@softhsm2//:gen_dir",
+        "@softhsm2//:softhsm_lib",
     ],
     env = {
-        "SOFTHSM2_CONF": "$(rootpath //signing/softhsm:conf)",
+        "SOFTHSM2_CONF": "$(rootpath @lowrisc_opentitan//signing/softhsm:conf)",
         "FIRST": "hsmtool",
         "PREPARE_CMD": """
-            sw/host/opentitantool/opentitantool image manifest update
-                --ecdsa-key=sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.pub.der
+            external/lowrisc_opentitan/sw/host/opentitantool/opentitantool image manifest update
+                --ecdsa-key=external/lowrisc_opentitan/sw/device/silicon_creator/lib/ownership/keys/fake/app_prod_ecdsa_p256.pub.der
                 --output=image.signed_bin
                 $(rootpath :image_bin)
         """,
@@ -331,7 +338,7 @@ sh_test(
             image manifest verify
                 image.signed_bin
         """,
-        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:gen_dir)/lib/softhsm/libsofthsm2.so",
+        "HSMTOOL_MODULE": "$(rootpath @softhsm2//:softhsm_lib)",
         "HSMTOOL_ARGS": """
             -t fake_keys -u user -p 123456
             ecdsa sign

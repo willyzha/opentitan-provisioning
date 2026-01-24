@@ -14,4 +14,5 @@ def _serde_annotate_repo():
         sha256 = "7300ed093fa3de679512ffdab7d0f1824be2b11f499bb852df29c3ae12e1348d",
         strip_prefix = "serde-annotate-0.0.12",
         url = "https://github.com/lowRISC/serde-annotate/archive/refs/tags/v0.0.12.tar.gz",
+        build_file = Label("//third_party/serde_annotate:BUILD.serde_annotate.bazel"),
     )

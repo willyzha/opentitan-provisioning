@@ -45,6 +45,7 @@ impl Import {
     const PUBLIC_TEMPLATE: &str = r#"{
         "CKA_CLASS": "CKO_PUBLIC_KEY",
         "CKA_KEY_TYPE": "CKK_MLDSA",
+        "CKA_PARAMETER_SET": 2,
         "CKA_TOKEN": true,
         "CKA_VERIFY": true
     }"#;

@@ -50,3 +50,15 @@ cmake(
         "libsofthsm2.so",
     ],
 )
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":softhsm2"],
+)
+
+genrule(
+    name = "softhsm_lib",
+    srcs = [":softhsm2"],
+    outs = ["libsofthsm2.so"],
+    cmd = "find $(locations :softhsm2) -name libsofthsm2.so -exec cp {} $@ \\; -quit",
+)

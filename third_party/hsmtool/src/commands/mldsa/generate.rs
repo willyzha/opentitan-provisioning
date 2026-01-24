@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use anyhow::Result;
-use cryptoki::mechanism::vendor_defined::VendorDefinedMechanism;
 use cryptoki::mechanism::Mechanism;
 use cryptoki::session::Session;
 use serde::{Deserialize, Serialize};
@@ -39,6 +38,7 @@ impl Generate {
     const PUBLIC_TEMPLATE: &str = r#"{
         "CKA_CLASS": "CKO_PUBLIC_KEY",
         "CKA_KEY_TYPE": "CKK_MLDSA",
+        "CKA_PARAMETER_SET": 2,
         "CKA_TOKEN": true,
         "CKA_VERIFY": true
     }"#;
@@ -110,10 +110,7 @@ impl Dispatch for Generate {
         let public_template = public_template.to_vec()?;
         let private_template = private_template.to_vec()?;
 
-        let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
-            MechanismType::MldsaKeyPairGen.try_into()?,
-            None,
-        ));
+        let mechanism = Mechanism::MlDsaKeyPairGen;
 
         let (_pubkey, _privkey) = session.generate_key_pair(
             &mechanism,
