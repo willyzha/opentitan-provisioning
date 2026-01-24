@@ -13,12 +13,16 @@ use crate::module::Module;
 pub mod export;
 pub mod generate;
 pub mod import;
+pub mod sign;
+pub mod verify;
 
 #[derive(clap::Subcommand, Debug, Serialize, Deserialize)]
 pub enum Mldsa {
     Generate(generate::Generate),
     Export(export::Export),
     Import(import::Import),
+    Sign(sign::Sign),
+    Verify(verify::Verify),
 }
 
 #[typetag::serde(name = "__mldsa__")]
@@ -33,6 +37,8 @@ impl Dispatch for Mldsa {
             Mldsa::Generate(x) => x.run(context, hsm, session),
             Mldsa::Export(x) => x.run(context, hsm, session),
             Mldsa::Import(x) => x.run(context, hsm, session),
+            Mldsa::Sign(x) => x.run(context, hsm, session),
+            Mldsa::Verify(x) => x.run(context, hsm, session),
         }
     }
     fn leaf(&self) -> &dyn Dispatch
@@ -43,6 +49,8 @@ impl Dispatch for Mldsa {
             Mldsa::Generate(x) => x.leaf(),
             Mldsa::Export(x) => x.leaf(),
             Mldsa::Import(x) => x.leaf(),
+            Mldsa::Sign(x) => x.leaf(),
+            Mldsa::Verify(x) => x.leaf(),
         }
     }
 }

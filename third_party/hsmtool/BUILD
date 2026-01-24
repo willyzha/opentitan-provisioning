@@ -28,6 +28,8 @@ rust_library(
         "src/commands/mldsa/generate.rs",
         "src/commands/mldsa/import.rs",
         "src/commands/mldsa/mod.rs",
+        "src/commands/mldsa/sign.rs",
+        "src/commands/mldsa/verify.rs",
         "src/commands/mod.rs",
         "src/commands/object/destroy.rs",
         "src/commands/object/list.rs",
