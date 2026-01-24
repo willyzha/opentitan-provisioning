@@ -416,6 +416,85 @@
         ]
       }
     },
+    "//third_party/rust:extensions.bzl%serde_annotate": {
+      "general": {
+        "bzlTransitiveDigest": "O9r8WKuFZnnqM1mSyOxmoqo+Cxns5tj86MbyhPhQB1o=",
+        "usagesDigest": "Be3EaDXRsyBhF4yWWxYEhTYeiS9OFiN/wYKRkiWzAQE=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "lowrisc_serde_annotate": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "sha256": "7300ed093fa3de679512ffdab7d0f1824be2b11f499bb852df29c3ae12e1348d",
+              "strip_prefix": "serde-annotate-0.0.12",
+              "url": "https://github.com/lowRISC/serde-annotate/archive/refs/tags/v0.0.12.tar.gz"
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
+    "//third_party/sphincsplus_repo:extensions.bzl%sphincsplus": {
+      "general": {
+        "bzlTransitiveDigest": "uyBNYLs0CgdNFiz3CNpaMY3llDfMlApZQ9OOhYE5DxI=",
+        "usagesDigest": "oYK2eilT0zKi7FwKJWSl51brvyGtAew+W/FTBPQuYko=",
+        "recordedFileInputs": {},
+        "recordedDirentsInputs": {},
+        "envVariables": {},
+        "generatedRepoSpecs": {
+          "sphincsplus_shake256_kat": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "build_file": "@@//third_party/sphincsplus_repo:BUILD.sphincsplus_common.bazel",
+              "sha256": "95f5c79995ad8a3bc752c760f93ec409763cf2b23d1a7a7404219f26d665f7ab",
+              "urls": [
+                "https://storage.googleapis.com/ot-crypto-test-vectors/sphincsplus/sphincsplus_shake256_128s_fips205-ipd.zip"
+              ]
+            }
+          },
+          "sphincsplus_sha256_kat": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "build_file": "@@//third_party/sphincsplus_repo:BUILD.sphincsplus_common.bazel",
+              "sha256": "1656a6aa06d731905ef72fcfbdf65f365d4c0fe89cbf3b24d1dbb64669a25e35",
+              "urls": [
+                "https://storage.googleapis.com/ot-crypto-test-vectors/sphincsplus/sphincsplus_sha256_128s_fips205-ipd.zip"
+              ]
+            }
+          },
+          "sphincsplus_fips205_ipd": {
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "attributes": {
+              "url": "https://github.com/sphincs/sphincsplus/archive/129b72c80e122a22a61f71b5d2b042770890ccee.tar.gz",
+              "strip_prefix": "sphincsplus-129b72c80e122a22a61f71b5d2b042770890ccee/ref",
+              "build_file": "@@//third_party/sphincsplus_repo:BUILD.sphincsplus.bazel",
+              "sha256": "b301faa7a42ef538323a732929d49341b1cbd8375f643f7d98ca32cd6efacc32",
+              "patches": [
+                "@@//third_party/sphincsplus_repo/patches:sphincsplus-namespace.patch"
+              ],
+              "patch_args": [
+                "-p2"
+              ]
+            }
+          }
+        },
+        "recordedRepoMappingEntries": [
+          [
+            "",
+            "bazel_tools",
+            "bazel_tools"
+          ]
+        ]
+      }
+    },
     "@@apple_support+//crosstool:setup.bzl%apple_cc_configure_extension": {
       "general": {
         "bzlTransitiveDigest": "xcBTf2+GaloFpg7YEh/Bv+1yAczRkiCt3DGws4K7kSk=",

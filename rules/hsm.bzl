@@ -628,7 +628,7 @@ hsm_config_script = rule(
             allow_single_file = True,
         ),
         "_hsmtool": attr.label(
-            default = "@lowrisc_opentitan//sw/host/hsmtool",
+            default = "//third_party/hsmtool",
             allow_single_file = True,
             cfg = "exec",
             executable = True,
