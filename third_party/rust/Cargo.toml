@@ -92,9 +92,11 @@ tempfile = "3.3.0"
 thiserror = "1.0"
 tiny-keccak = {version = "2.0.2", features = ["cshake"]}
 typetag = "0.2"
-x509-cert = "0.2.5"
+x509-cert = { version = "0.2.5", features = ["builder"] }
 zerocopy = { version = "0.8", features = ["derive"] }
 zeroize = "1.8.1"
+signature = "2.0"
+spki = "0.7"
 
 # hsmtool dependencies
 cryptoki = "0.12.0"
