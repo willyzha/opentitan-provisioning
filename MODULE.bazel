@@ -219,7 +219,6 @@ single_version_override(
     version = "0.59.2",
 )
 
-
 single_version_override(
     module_name = "rules_rust_bindgen",
     patch_strip = 0,
@@ -431,3 +430,22 @@ http_archive(
     strip_prefix = "gh_2.20.2_linux_amd64",
     urls = ["https://github.com/cli/cli/releases/download/v2.20.2/gh_2.20.2_linux_amd64.tar.gz"],
 )
+
+# -------------------------------------------------------------------------
+# Sphincs+ (Vendored)
+# -------------------------------------------------------------------------
+
+sphincsplus = use_extension("//third_party/sphincsplus_repo:extensions.bzl", "sphincsplus")
+use_repo(
+    sphincsplus,
+    "sphincsplus_fips205_ipd",
+    "sphincsplus_sha256_kat",
+    "sphincsplus_shake256_kat",
+)
+
+# -------------------------------------------------------------------------
+# Rust Extensions
+# -------------------------------------------------------------------------
+
+serde_annotate = use_extension("//third_party/rust:extensions.bzl", "serde_annotate")
+use_repo(serde_annotate, "lowrisc_serde_annotate")
