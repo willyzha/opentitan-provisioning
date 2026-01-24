@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 set -euo pipefail
-source sw/host/hsmtool/tests/test_lib.sh
+source third_party/hsmtool/tests/test_lib.sh
 
-OPENTITANTOOL=sw/host/opentitantool/opentitantool
-HSMTOOL=sw/host/hsmtool/hsmtool
+OPENTITANTOOL=external/lowrisc_opentitan/sw/host/opentitantool/opentitantool
+HSMTOOL=third_party/hsmtool/hsmtool
 
 # shellcheck disable=SC2206
 OTTOOL_ARGS=(${OTTOOL_ARGS})
