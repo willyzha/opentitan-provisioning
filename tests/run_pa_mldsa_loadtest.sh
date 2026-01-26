@@ -19,11 +19,12 @@ SKU_NAMES="sival_mldsa"
 
 # Run the PA MLDSA loadtest.
 echo "Running PA MLDSA loadtest ..."
-bazelisk run //src/pa:mldsa_loadtest -- \
+bazelisk run //src/pa:loadtest -- \
    --ca_root_certs=${DEPLOYMENT_DIR}/certs/out/ca-cert.pem \
    --client_cert="${DEPLOYMENT_DIR}/certs/out/ate-client-cert.pem" \
    --client_key="${DEPLOYMENT_DIR}/certs/out/ate-client-key.pem" \
    --enable_tls=true \
+   --enable_mldsa=true \
    --hsm_so="${HSMTOOL_MODULE}" \
    --pa_address="${OTPROV_DNS_PA}:${OTPROV_PORT_PA}" \
    --parallel_clients=5 \

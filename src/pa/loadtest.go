@@ -28,6 +28,7 @@ import (
 	pbc "github.com/lowRISC/opentitan-provisioning/src/proto/crypto/cert_go_pb"
 	pbcommon "github.com/lowRISC/opentitan-provisioning/src/proto/crypto/common_go_pb"
 	pbe "github.com/lowRISC/opentitan-provisioning/src/proto/crypto/ecdsa_go_pb"
+	pbm "github.com/lowRISC/opentitan-provisioning/src/proto/crypto/mldsa_go_pb"
 	dpb "github.com/lowRISC/opentitan-provisioning/src/proto/device_id_go_pb"
 	"github.com/lowRISC/opentitan-provisioning/src/spm/services/skumgr"
 	"github.com/lowRISC/opentitan-provisioning/src/transport/grpconn"
@@ -53,6 +54,7 @@ var (
 	skuNames        = flag.String("sku_names", "", "Comma-separated list of SKUs to test (e.g., sival,cr01,pi01,ti01). Required.")
 	testSKUAuth     = flag.String("sku_auth", "test_password", "The SKU authorization password to use.")
 	totalDuts       = flag.Int("total_duts", 1, "The total number of DUTs to process during the load test")
+	enableMLDSA     = flag.Bool("enable_mldsa", false, "Enable additional MLDSA endorsement")
 )
 
 // clientTask encapsulates a client connection.
@@ -290,6 +292,7 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 		Bundles:     []*pbp.EndorseCertBundle{},
 	}
 	for _, tbsCert := range persoBlob.X509TbsCerts {
+		// Always sign with ECDSA
 		endorseReq.Bundles = append(endorseReq.Bundles, &pbp.EndorseCertBundle{
 			KeyParams: &pbc.SigningKeyParams{
 				KeyLabel: tbsCert.KeyLabel,
@@ -303,6 +306,21 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 			},
 			Tbs: tbsCert.Tbs,
 		})
+
+		// Additionally sign with MLDSA if requested
+		if *enableMLDSA {
+			endorseReq.Bundles = append(endorseReq.Bundles, &pbp.EndorseCertBundle{
+				KeyParams: &pbc.SigningKeyParams{
+					KeyLabel: tbsCert.KeyLabel,
+					Key: &pbc.SigningKeyParams_MldsaParams{
+						MldsaParams: &pbm.MldsaParams{
+							ParamSets: pbm.MldsaParameterSets_MLDSA_PARAMETER_SETS_MLDSA_65,
+						},
+					},
+				},
+				Tbs: tbsCert.Tbs,
+			})
+		}
 	}
 	endorsedCerts, err := c.client.EndorseCerts(client_ctx, endorseReq)
 	if err != nil {
@@ -337,7 +355,8 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	if err != nil {
 		return fmt.Errorf("failed to build perso blob for DUT: %w", err)
 	}
-	persoBlobToDutForJSON := &pbd.PersoBlobJSON{
+
+persoBlobToDutForJSON := &pbd.PersoBlobJSON{
 		NumObjs:  uint32(len(endorsedCertsForDut)),
 		NextFree: uint32(len(persoBlobToDut)),
 		Body:     make([]uint32, dututils.KPersoBlobMaxSize),
@@ -345,7 +364,8 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	for i, b := range persoBlobToDut {
 		persoBlobToDutForJSON.Body[i] = uint32(b)
 	}
-	persoBlobToDutJSON, err := json.Marshal(persoBlobToDutForJSON)
+
+persoBlobToDutJSON, err := json.Marshal(persoBlobToDutForJSON)
 	if err != nil {
 		return fmt.Errorf("failed to marshal perso blob for DUT: %w", err)
 	}
@@ -358,7 +378,8 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	if err != nil {
 		return fmt.Errorf("failed to convert device ID from raw bytes: %w", err)
 	}
-	persoTlv, numObjs, err := dut.GeneratePersoTlv()
+
+persoTlv, numObjs, err := dut.GeneratePersoTlv()
 	if err != nil {
 		return fmt.Errorf("failed to generate perso TLV: %w", err)
 	}
@@ -415,7 +436,8 @@ func newClientGroup(ctx context.Context, numClients int, skuName string) (*clien
 	return &clientGroup{
 		clients: clients,
 		results: results,
-	}, nil
+	},
+	nil
 }
 
 func run(ctx context.Context, cg *clientGroup, numDutsPerClient int, skuName string, test callFunc, allDuts []*dututils.Dut) (int, error) {
@@ -492,7 +514,7 @@ func main() {
 		duration time.Duration
 		numDuts  int
 	}
-	results := []result{}
+	res := []result{}
 	parsedSkuNames := strings.Split(*skuNames, ",")
 
 	opts := skumgr.Options{
@@ -534,7 +556,7 @@ func main() {
 			if err != nil {
 				currentResult.pass = false
 				currentResult.msg = fmt.Sprintf("failed to initialize client tasks: %v", err)
-				results = append(results, currentResult)
+				res = append(res, currentResult)
 				continue
 			}
 
@@ -550,7 +572,7 @@ func main() {
 			if err != nil {
 				currentResult.pass = false
 				currentResult.msg = fmt.Sprintf("failed to execute test (failure count: %d): %v", errCount, err)
-				results = append(results, currentResult)
+				res = append(res, currentResult)
 				continue
 			}
 
@@ -561,12 +583,12 @@ func main() {
 			currentResult.rate = rate
 			currentResult.duration = elapsedTime
 			currentResult.numDuts = *totalDuts
-			results = append(results, currentResult)
+			res = append(res, currentResult)
 		}
 	}
 
 	failed := 0
-	for _, r := range results {
+	for _, r := range res {
 		if !r.pass {
 			failed++
 		}
