@@ -239,7 +239,7 @@ func (d *Dut) ExpectedExtCerts() (int, error) {
 	return 0, nil
 }
 
-func (d *Dut) BuildTbsCerts() error {
+func (d *Dut) BuildTbsCerts(alg string) error {
 	// Generate TBS certificates for the DUT. This requires accessing the HSM.
 	certLabels := []string{"UDS"}
 
@@ -252,7 +252,7 @@ func (d *Dut) BuildTbsCerts() error {
 		certLabels = append(certLabels, fmt.Sprintf("EXT_%d", i))
 	}
 
-	tbsCerts, privKeys, err := tbsgen.BuildTestTBSCerts(d.skuMgr, d.skuName, certLabels)
+	tbsCerts, privKeys, err := tbsgen.BuildTestTBSCerts(d.skuMgr, d.skuName, certLabels, alg)
 	if err != nil {
 		return fmt.Errorf("failed to generate TBS certificates for SKU %q: %v", d.skuName, err)
 	}
