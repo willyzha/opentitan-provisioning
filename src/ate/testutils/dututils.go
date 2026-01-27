@@ -18,9 +18,9 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/big"
 	mrand "math/rand"
-	"log"
 	"time"
 
 	"github.com/lowRISC/opentitan-provisioning/src/ate"
@@ -35,7 +35,7 @@ import (
 )
 
 // From ate_api.h
-const KPersoBlobMaxSize = 8192
+const KPersoBlobMaxSize = 32768
 
 // Simulated hardware delays
 const (
@@ -65,14 +65,14 @@ const (
 
 // Dut emulates an OpenTitan device during provisioning.
 type Dut struct {
-	skuMgr        *skumgr.Manager
-	skuConfig     *skucfg.Config
-	skuName       string
-	DeviceID      *ate.DeviceIDBytes
-	privKeys      map[string]*ecdsa.PrivateKey
-	persoBlob     *ate.PersoBlob
-	endorsedCerts []ate.EndorseCertResponse
-	tbsCerts      map[string][]byte
+	skuMgr            *skumgr.Manager
+	skuConfig         *skucfg.Config
+	skuName           string
+	DeviceID          *ate.DeviceIDBytes
+	privKeys          map[string]*ecdsa.PrivateKey
+	persoBlob         *ate.PersoBlob
+	endorsedCerts     []ate.EndorseCertResponse
+	tbsCerts          map[string][]byte
 	certChainDiceLeaf string
 
 	// Cached tokens
@@ -220,7 +220,7 @@ func NewDut(opts skumgr.Options, skuName string) (*Dut, error) {
 	}, nil
 }
 
-func (d *Dut) ExpectedExtCerts() (int, error) {
+func (d *Dut) ExpectedExtCerts(mldsa bool) (int, error) {
 	if _, err := d.skuConfig.GetUnsafeAttribute("SigningKey/Ext/v0"); err == nil {
 		var numDiceCerts int
 		switch d.certChainDiceLeaf {
@@ -231,25 +231,56 @@ func (d *Dut) ExpectedExtCerts() (int, error) {
 		case "CDI_1":
 			numDiceCerts = 3
 		}
-		if d.skuConfig.CertCountX509 < numDiceCerts {
-			return 0, fmt.Errorf("expected at least %d X.509 certificates, got %d", numDiceCerts, d.skuConfig.CertCountX509)
+
+		// Check if the SKU supports MLDSA.
+		skuSupportsMldsa := false
+		if _, err := d.skuConfig.GetUnsafeAttribute("SigningKey/Dice/Mldsa/v0"); err == nil {
+			skuSupportsMldsa = true
 		}
-		return d.skuConfig.CertCountX509 - numDiceCerts, nil
+
+		consumed := numDiceCerts
+		if mldsa && skuSupportsMldsa {
+			consumed += 1 // UDS_MLDSA
+		}
+
+		if d.skuConfig.CertCountX509 < consumed {
+			return 0, fmt.Errorf("expected at least %d X.509 certificates, got %d", consumed, d.skuConfig.CertCountX509)
+		}
+
+		remaining := d.skuConfig.CertCountX509 - consumed
+		if mldsa && skuSupportsMldsa {
+			return remaining / 2, nil
+		}
+		return remaining, nil
 	}
 	return 0, nil
 }
 
-func (d *Dut) BuildTbsCerts() error {
+func (d *Dut) BuildTbsCerts(mldsa bool) error {
+	// Check if the SKU supports MLDSA.
+	skuSupportsMldsa := false
+	if _, err := d.skuConfig.GetUnsafeAttribute("SigningKey/Dice/Mldsa/v0"); err == nil {
+		skuSupportsMldsa = true
+	}
+
 	// Generate TBS certificates for the DUT. This requires accessing the HSM.
 	certLabels := []string{"UDS"}
+	if mldsa && skuSupportsMldsa {
+		certLabels = append(certLabels, "UDS_MLDSA")
+	}
 
-	numExtCerts, err := d.ExpectedExtCerts()
+	numExtCerts, err := d.ExpectedExtCerts(mldsa)
 	if err != nil {
 		return fmt.Errorf("failed to get expected number of EXT certificates: %v", err)
 	}
 
 	for i := 0; i < numExtCerts; i++ {
 		certLabels = append(certLabels, fmt.Sprintf("EXT_%d", i))
+	}
+	if mldsa && skuSupportsMldsa {
+		for i := 0; i < numExtCerts; i++ {
+			certLabels = append(certLabels, fmt.Sprintf("EXT_MLDSA_%d", i))
+		}
 	}
 
 	tbsCerts, privKeys, err := tbsgen.BuildTestTBSCerts(d.skuMgr, d.skuName, certLabels)
@@ -440,10 +471,9 @@ func (d *Dut) GeneratePersoBlob() ([]byte, error) {
 	return json.Marshal(persoBlobJSON)
 }
 
-
 // GenerateDummyCwtCerts generates dummy CWT certificates.
 // The Cert payload is a random 256 bytes.
-func (d * Dut) GenerateDummyCwtCerts() ([]ate.EndorseCertResponse, error) {
+func (d *Dut) GenerateDummyCwtCerts() ([]ate.EndorseCertResponse, error) {
 	certs := make([]ate.EndorseCertResponse, d.skuConfig.CertCountCWT)
 	for i := 0; i < d.skuConfig.CertCountCWT; i++ {
 		randBytes := make([]byte, 256)
@@ -459,7 +489,7 @@ func (d * Dut) GenerateDummyCwtCerts() ([]ate.EndorseCertResponse, error) {
 	return certs, nil
 }
 
-// GeneratePersoTlv builds a personalization TLV blob containing endorsed 
+// GeneratePersoTlv builds a personalization TLV blob containing endorsed
 // certificates.
 func (d *Dut) GeneratePersoTlv() ([]byte, uint32, error) {
 	time.Sleep(GeneratePersoBlobDelay)
