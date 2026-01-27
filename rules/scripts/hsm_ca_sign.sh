@@ -193,13 +193,14 @@ certgen () {
     PKCS11_MODULE_PATH="${FLAGS_HSMTOOL_MODULE}"
   )
 
-  ENGINE="pkcs11"
+  # Check if we should use Gem engine or PKCS#11 provider.
+  USE_GEM=false
   if [ "${OTPROV_USE_GEM_ENGINE}" == true ]; then
-    ENGINE="gem"
+    USE_GEM=true
   fi
 
   KEY="pkcs11:pin-value=${FLAGS_HSMTOOL_PIN};object=${ca_key};token=${FLAGS_HSMTOOL_TOKEN}"
-  if [ "${OTPROV_USE_GEM_ENGINE}" == true ]; then
+  if [ "${USE_GEM}" == true ]; then
     KEY="${ca_key}"
   fi
 
@@ -207,21 +208,60 @@ certgen () {
   CSR_FILE="${OUTDIR_CA}/${ca_key}.csr"
   CERT_FILE="${OUTDIR_CA}/${ca_key}.pem"
 
-
+  # Helper to check if key is MLDSA
+  is_mldsa_key() {
+    [[ "$1" == *"-mldsa-"* ]]
+  }
 
   if [[ "${FLAGS_SIGN_ONLY}" == false ]]; then
-    # Generate a CSR for the CA key. This can be either a root CA or an
-    # intermediate CA.
+    # Generate a CSR for the CA key.
     echo "Generating CSR for ${ca_key}"
-    env "${certvars[@]}" \
-    openssl req -new -engine "${ENGINE}" -keyform engine \
-        -config "${CONFIG_FILE}" \
-        -out "${CSR_FILE}" \
-        -key "${KEY}"
+    if [ "${USE_GEM}" == true ]; then
+        env "${certvars[@]}" \
+        openssl req -new -engine "gem" -keyform engine \
+            -config "${CONFIG_FILE}" \
+            -out "${CSR_FILE}" \
+            -key "${KEY}"
+    elif is_mldsa_key "${ca_key}"; then
+        # Use hsmtool for MLDSA CSR generation.
+        # Parse DN from config file.
+        # Format expected: C=US, ST=CA, O=Google, OU=Engineering, CN=Google Engineering ICA
+        # The config file has:
+        # [dn]
+        # C=US
+        # ...
+        C=$(grep "^C=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        ST=$(grep "^ST=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        O=$(grep "^O=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        OU=$(grep "^OU=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        CN=$(grep "^CN=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        SUBJ="C=${C},ST=${ST},O=${O},OU=${OU},CN=${CN}"
+
+        # Assuming HSMTOOL_BIN is available via runfiles/environment.
+        # If not, we might need to rely on the fact that this script is run by token_init which sets it.
+        # But inside Bazel build, we need to ensure we use the binary passed in via runfiles.
+        # The rule `hsm_certgen_script` provided `_hsmtool`.
+        # Its path should be resolved.
+        # We can try finding it or expect it in path.
+        HSMTOOL_CMD="hsmtool"
+        if [[ -x "third_party/hsmtool/hsmtool" ]]; then
+           HSMTOOL_CMD="./third_party/hsmtool/hsmtool"
+        elif [[ -n "${HSMTOOL_BIN}" ]]; then
+           HSMTOOL_CMD="${HSMTOOL_BIN}"
+        fi
+
+        "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
+            mldsa export-csr --label "${ca_key}" --subject "${SUBJ}" --output "${CSR_FILE}"
+    else
+        # Use Engine for others (ECDSA/RSA)
+        env "${certvars[@]}" \
+        openssl req -new -engine "pkcs11" -keyform engine \
+            -config "${CONFIG_FILE}" \
+            -out "${CSR_FILE}" \
+            -key "${KEY}"
+    fi
   else
-    # Running in sign only mode means that the CSR is already present in the
-    # input tarball and/or ca directory. Only need to check if the CSR file
-    # exists.
+    # Running in sign only mode...
     if [[ ! -f "${CSR_FILE}" ]]; then
       echo "Error: CSR file ${CSR_FILE} does not exist."
       exit 1
@@ -233,21 +273,41 @@ certgen () {
     return
   fi
 
-  ENDORSING_KEY="pkcs11:pin-value=${HSMTOOL_PIN};object=${endorsing_key};token=${FLAGS_HSMTOOL_TOKEN}"
-  if [ "${OTPROV_USE_GEM_ENGINE}" == true ]; then
+  ENDORSING_KEY="pkcs11:pin-value=${FLAGS_HSMTOOL_PIN};object=${endorsing_key};token=${FLAGS_HSMTOOL_TOKEN}"
+  if [ "${USE_GEM}" == true ]; then
     ENDORSING_KEY="${endorsing_key}"
   fi
 
   if [[ "${ca_key}" == "${endorsing_key}" ]]; then
     echo "Generating root CA certificate for ${ca_key}"
-    env "${certvars[@]}" \
-    openssl x509 -req -engine "${ENGINE}" -keyform engine \
-      -in "${CSR_FILE}" \
-      -out "${CERT_FILE}" \
-      -days 7300 \
-      -extfile "${CONFIG_FILE}" \
-      -extensions v3_ca \
-      -signkey "${ENDORSING_KEY}"
+    if [ "${USE_GEM}" == true ]; then
+        env "${certvars[@]}" \
+        openssl x509 -req -engine "gem" -keyform engine \
+        -in "${CSR_FILE}" \
+        -out "${CERT_FILE}" \
+        -days 7300 \
+        -extfile "${CONFIG_FILE}" \
+        -extensions v3_ca \
+        -signkey "${ENDORSING_KEY}"
+    elif is_mldsa_key "${endorsing_key}"; then
+        env "${certvars[@]}" \
+        openssl x509 -req -provider pkcs11 -provider default \
+        -in "${CSR_FILE}" \
+        -out "${CERT_FILE}" \
+        -days 7300 \
+        -extfile "${CONFIG_FILE}" \
+        -extensions v3_ca \
+        -signkey "${ENDORSING_KEY}"
+    else
+        env "${certvars[@]}" \
+        openssl x509 -req -engine "pkcs11" -keyform engine \
+        -in "${CSR_FILE}" \
+        -out "${CERT_FILE}" \
+        -days 7300 \
+        -extfile "${CONFIG_FILE}" \
+        -extensions v3_ca \
+        -signkey "${ENDORSING_KEY}"
+    fi
   else
     echo "Generating certificate for ${ca_key} signed by ${endorsing_key}"
 
@@ -257,16 +317,39 @@ certgen () {
       exit 1
     fi
 
-    env "${certvars[@]}" \
-    openssl x509 -req -engine "${ENGINE}" -keyform engine \
-      -in "${CSR_FILE}" \
-      -out "${CERT_FILE}" \
-      -days 7300 \
-      -extfile "${CONFIG_FILE}" \
-      -extensions v3_ca \
-      -CA "${CA_ENDORSING_CERT_FILE}" \
-      -CAkeyform engine \
-      -CAkey "${ENDORSING_KEY}"
+    if [ "${USE_GEM}" == true ]; then
+        env "${certvars[@]}" \
+        openssl x509 -req -engine "gem" -keyform engine \
+        -in "${CSR_FILE}" \
+        -out "${CERT_FILE}" \
+        -days 7300 \
+        -extfile "${CONFIG_FILE}" \
+        -extensions v3_ca \
+        -CA "${CA_ENDORSING_CERT_FILE}" \
+        -CAkeyform engine \
+        -CAkey "${ENDORSING_KEY}"
+    elif is_mldsa_key "${endorsing_key}"; then
+        env "${certvars[@]}" \
+        openssl x509 -req -provider pkcs11 -provider default \
+        -in "${CSR_FILE}" \
+        -out "${CERT_FILE}" \
+        -days 7300 \
+        -extfile "${CONFIG_FILE}" \
+        -extensions v3_ca \
+        -CA "${CA_ENDORSING_CERT_FILE}" \
+        -CAkey "${ENDORSING_KEY}"
+    else
+        env "${certvars[@]}" \
+        openssl x509 -req -engine "pkcs11" -keyform engine \
+        -in "${CSR_FILE}" \
+        -out "${CERT_FILE}" \
+        -days 7300 \
+        -extfile "${CONFIG_FILE}" \
+        -extensions v3_ca \
+        -CA "${CA_ENDORSING_CERT_FILE}" \
+        -CAkeyform engine \
+        -CAkey "${ENDORSING_KEY}"
+    fi
   fi
 
   echo "Converting certificate for ${ca_key} to DER"
