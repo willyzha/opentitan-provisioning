@@ -210,7 +210,7 @@ certgen () {
 
   # Helper to check if key is MLDSA
   is_mldsa_key() {
-    [[ "$1" == *"mldsa"* ]]
+    [[ "$1" == *"-mldsa-"* ]]
   }
 
   if [[ "${FLAGS_SIGN_ONLY}" == false ]]; then

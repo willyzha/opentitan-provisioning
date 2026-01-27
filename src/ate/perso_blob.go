@@ -17,7 +17,7 @@ const (
 	kCertificateKeyLabelMaxSize = 32
 	kDevSeedBytesSize           = 128
 	kWasHmacSignatureSize       = 32
-	kPersoBlobMaxSize           = 8192
+	kPersoBlobMaxSize           = 32768
 	kDeviceIDSize               = 32
 )
 
