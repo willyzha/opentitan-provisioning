@@ -1,0 +1,28 @@
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_proc_macro")
+
+package(default_visibility = ["//visibility:public"])
+
+rust_proc_macro(
+    name = "serde_annotate_derive",
+    srcs = glob(["serde_annotate_derive/src/**/*.rs"]),
+    deps = [
+        "@crate_index//:proc-macro2",
+        "@crate_index//:quote",
+        "@crate_index//:syn",
+    ],
+)
+
+rust_library(
+    name = "serde_annotate",
+    srcs = glob(["src/**/*.rs"]),
+    proc_macro_deps = [
+        ":serde_annotate_derive",
+    ],
+    deps = [
+        "@crate_index//:serde",
+        "@crate_index//:serde_json",
+        "@crate_index//:thiserror",
+        "@crate_index//:anstyle",
+        "@crate_index//:hex",
+    ],
+)

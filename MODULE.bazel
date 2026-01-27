@@ -205,6 +205,7 @@ single_version_override(
     version = "0.59.2",
 )
 
+bazel_dep(name = "rules_rust_bindgen", version = "0.59.2")
 single_version_override(
     module_name = "rules_rust_bindgen",
     patch_strip = 0,
@@ -219,11 +220,21 @@ single_version_override(
 crate = use_extension("@rules_rust//crate_universe:extension.bzl", "crate")
 crate.from_cargo(
     name = "provisioning_index",
-    cargo_lockfile = "@lowrisc_opentitan//third_party/rust:Cargo.lock",
-    manifests = ["@lowrisc_opentitan//third_party/rust:Cargo.toml"],
+    cargo_lockfile = "//third_party/rust:Cargo.lock",
+    manifests = ["//third_party/rust:Cargo.toml"],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )
-use_repo(crate, "crate_index", "provisioning_index")
+crate.annotation(
+    crate = "cryptoki-sys",
+    additive_build_file_content = """
+filegroup(
+    name = "cryptoki-sys-binding-srcs",
+    srcs = glob(["src/bindings/*.rs"]),
+    visibility = ["//visibility:public"],
+)
+""",
+)
+use_repo(crate, crate_index = "provisioning_index")
 register_toolchains("@lowrisc_opentitan//third_party/rust:bindgen_toolchain")
 
 # -------------------------------------------------------------------------
@@ -353,3 +364,22 @@ http_archive(
     strip_prefix = "gh_2.20.2_linux_amd64",
     urls = ["https://github.com/cli/cli/releases/download/v2.20.2/gh_2.20.2_linux_amd64.tar.gz"],
 )
+
+# -------------------------------------------------------------------------
+# Sphincs+ (Vendored)
+# -------------------------------------------------------------------------
+
+sphincsplus = use_extension("//third_party/sphincsplus_repo:extensions.bzl", "sphincsplus")
+use_repo(
+    sphincsplus,
+    "sphincsplus_fips205_ipd",
+    "sphincsplus_sha256_kat",
+    "sphincsplus_shake256_kat",
+)
+
+# -------------------------------------------------------------------------
+# Rust Extensions
+# -------------------------------------------------------------------------
+
+serde_annotate = use_extension("//third_party/rust:extensions.bzl", "serde_annotate")
+use_repo(serde_annotate, "lowrisc_serde_annotate")

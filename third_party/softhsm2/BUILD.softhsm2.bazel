@@ -18,6 +18,7 @@ cmake(
         "ENABLE_P11_KIT": "OFF",
         "ENABLE_STATIC": "OFF",
         "ENABLE_ECC": "ON",
+        "ENABLE_MLDSA": "ON",
         "WITH_CRYPTO_BACKEND": "openssl",
 
         # This build is for tests only.
@@ -30,6 +31,7 @@ cmake(
         "CMAKE_INSTALL_LOCALSTATEDIR": ".",
         "CMAKE_INSTALL_SYSCONFDIR": ".",
         "PROJECT_BINARY_DIR": ".",
+        "CMAKE_CXX_FLAGS": "-DWITH_ML_DSA",
     },
     # Set up SoftHSM to provide useful debug messages during testing.
     copts = [
@@ -47,4 +49,16 @@ cmake(
         "",
         "libsofthsm2.so",
     ],
+)
+
+filegroup(
+    name = "gen_dir",
+    srcs = [":softhsm2"],
+)
+
+genrule(
+    name = "softhsm_lib",
+    srcs = [":softhsm2"],
+    outs = ["libsofthsm2.so"],
+    cmd = "find $(locations :softhsm2) -name libsofthsm2.so -exec cp {} $@ \\; -quit",
 )
