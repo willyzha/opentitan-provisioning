@@ -83,6 +83,19 @@ func (k PrivateKey) SignMLDSA(message []byte) ([]byte, error) {
 	return data, nil
 }
 
+// VerifyMLDSA verifies an MLDSA signature.
+func (k PublicKey) VerifyMLDSA(message, signature []byte) error {
+	mech := []*pkcs11.Mechanism{pkcs11.NewMechanism(CKM_MLDSA, make([]byte, 0))}
+	if err := k.sess.tok.m.Raw().VerifyInit(k.sess.raw, mech, k.raw); err != nil {
+		return newError(err, "could not begin verification operation")
+	}
+
+	if err := k.sess.tok.m.Raw().Verify(k.sess.raw, message, signature); err != nil {
+		return newError(err, "signature verification failed")
+	}
+	return nil
+}
+
 // MLDSASigner implements crypto.Signer for MLDSA.
 type MLDSASigner struct {
 	PrivateKey
