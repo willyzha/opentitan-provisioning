@@ -45,7 +45,6 @@ impl Import {
     const PUBLIC_TEMPLATE: &str = r#"{
         "CKA_CLASS": "CKO_PUBLIC_KEY",
         "CKA_KEY_TYPE": "CKK_MLDSA",
-        "CKA_PARAMETER_SET": 2,
         "CKA_TOKEN": true,
         "CKA_VERIFY": true
     }"#;
@@ -82,10 +81,8 @@ impl Import {
             if let Some(tpl) = &self.private_template {
                 template.merge(tpl.clone());
             }
-        } else {
-            if let Some(tpl) = &self.public_template {
-                template.merge(tpl.clone());
-            }
+        } else if let Some(tpl) = &self.public_template {
+            template.merge(tpl.clone());
         }
 
         log::info!(
@@ -115,10 +112,8 @@ impl Import {
             if let Some(tpl) = &self.private_template {
                 template.merge(tpl.clone());
             }
-        } else {
-            if let Some(tpl) = &self.public_template {
-                template.merge(tpl.clone());
-            }
+        } else if let Some(tpl) = &self.public_template {
+            template.merge(tpl.clone());
         }
 
         let wrapped_data = helper::read_file(&self.filename)?;

@@ -6,7 +6,7 @@ use anyhow::{Result, anyhow};
 use const_oid::ObjectIdentifier;
 use cryptoki::mechanism::vendor_defined::VendorDefinedMechanism;
 use cryptoki::mechanism::Mechanism;
-use cryptoki::object::{Attribute, ObjectHandle};
+use cryptoki::object::Attribute;
 use cryptoki::session::Session;
 use der::{Encode, EncodePem};
 use serde::{Deserialize, Serialize};
@@ -23,8 +23,8 @@ use crate::module::Module;
 use crate::util::attribute::{AttributeMap, AttributeType, KeyType, MechanismType, ObjectClass};
 use crate::util::helper;
 
-// ML-DSA-65 OID: 2.16.840.1.101.3.4.3.18
-const OID_MLDSA_65: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.18");
+// ML-DSA-87 OID: 2.16.840.1.101.3.4.3.19
+const OID_MLDSA_87: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.19");
 
 #[derive(clap::Args, Debug, Serialize, Deserialize)]
 pub struct ExportCsr {
@@ -43,7 +43,7 @@ impl ExportCsr {
         // Find the private key
         let mut attrs = helper::search_spec(self.id.as_deref(), self.label.as_deref())?;
         attrs.push(Attribute::Class(ObjectClass::PrivateKey.try_into()?));
-        attrs.push(Attribute::KeyType(KeyType::Mldsa.try_into()?));
+        attrs.push(Attribute::KeyType(KeyType::MlDsa.try_into()?));
         let private_key = helper::find_one_object(session, &attrs)?;
 
         // Determine public key label
@@ -61,7 +61,7 @@ impl ExportCsr {
         // Find the public key (needed for CSR)
         let mut pub_attrs = helper::search_spec(self.id.as_deref(), pub_label)?;
         pub_attrs.push(Attribute::Class(ObjectClass::PublicKey.try_into()?));
-        pub_attrs.push(Attribute::KeyType(KeyType::Mldsa.try_into()?));
+        pub_attrs.push(Attribute::KeyType(KeyType::MlDsa.try_into()?));
         let public_key = helper::find_one_object(session, &pub_attrs)?;
 
         // Get public key value
@@ -74,7 +74,7 @@ impl ExportCsr {
 
         // Create CertReqInfo
         let algorithm = AlgorithmIdentifierOwned {
-            oid: OID_MLDSA_65,
+            oid: OID_MLDSA_87,
             parameters: None,
         };
         let subject_public_key_info = SubjectPublicKeyInfoOwned {
@@ -97,7 +97,7 @@ impl ExportCsr {
         // Using VendorDefinedMechanism for MLDSA signature generation
         // to avoid type mismatch with native Mechanism::MlDsa if params are tricky.
         let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
-            MechanismType::Mldsa.try_into()?,
+            MechanismType::MlDsa.try_into()?,
             None,
         ));
         
