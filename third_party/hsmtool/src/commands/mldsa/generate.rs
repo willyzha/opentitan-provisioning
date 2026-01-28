@@ -12,7 +12,7 @@ use std::str::FromStr;
 use crate::commands::{BasicResult, Dispatch};
 use crate::error::HsmError;
 use crate::module::Module;
-use crate::util::attribute::{AttrData, AttributeMap, AttributeType, MechanismType};
+use crate::util::attribute::{AttrData, AttributeMap, AttributeType};
 use crate::util::helper;
 
 #[derive(clap::Args, Debug, Serialize, Deserialize)]
@@ -38,7 +38,7 @@ impl Generate {
     const PUBLIC_TEMPLATE: &str = r#"{
         "CKA_CLASS": "CKO_PUBLIC_KEY",
         "CKA_KEY_TYPE": "CKK_MLDSA",
-        "CKA_PARAMETER_SET": 2,
+        "CKA_PARAMETER_SET": 3,
         "CKA_TOKEN": true,
         "CKA_VERIFY": true
     }"#;
@@ -78,7 +78,6 @@ impl Dispatch for Generate {
             AttributeMap::from_str(Self::PRIVATE_TEMPLATE).expect("error in PRIVATE_TEMPLATE");
         public_template.insert(AttributeType::Id, id.clone());
         public_template.insert(AttributeType::Label, result.label.clone());
-
         if let Some(tpl) = &self.public_template {
             public_template.merge(tpl.clone());
         }
@@ -112,11 +111,8 @@ impl Dispatch for Generate {
 
         let mechanism = Mechanism::MlDsaKeyPairGen;
 
-        let (_pubkey, _privkey) = session.generate_key_pair(
-            &mechanism,
-            &public_template,
-            &private_template,
-        )?;
+        let (_pubkey, _privkey) =
+            session.generate_key_pair(&mechanism, &public_template, &private_template)?;
         Ok(result)
     }
 }

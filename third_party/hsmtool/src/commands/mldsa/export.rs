@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use crate::commands::{BasicResult, Dispatch};
 use crate::error::HsmError;
 use crate::module::Module;
-use crate::util::attribute::{AttrData, AttributeMap, AttributeType, KeyType, ObjectClass};
+use crate::util::attribute::{AttributeMap, AttributeType, KeyType, ObjectClass};
 use crate::util::helper;
 use crate::util::key::KeyEncoding;
 use crate::util::wrap::{Wrap, WrapPrivateKey};
@@ -48,7 +48,6 @@ impl Export {
                 helper::write_file(&self.filename, &key_value)?;
             }
             KeyEncoding::Pem | KeyEncoding::Pkcs8Pem => {
-                // Simple PEM wrapping for now
                 let label = if self.private { "PRIVATE KEY" } else { "PUBLIC KEY" };
                 let pem = pem_rfc7468::encode_string(label, pem_rfc7468::LineEnding::LF, &key_value)?;
                 helper::write_file(&self.filename, pem.as_bytes())?;

@@ -6,7 +6,7 @@ use anyhow::{Result, anyhow};
 use const_oid::ObjectIdentifier;
 use cryptoki::mechanism::vendor_defined::VendorDefinedMechanism;
 use cryptoki::mechanism::Mechanism;
-use cryptoki::object::{Attribute, ObjectHandle};
+use cryptoki::object::Attribute;
 use cryptoki::session::Session;
 use der::{Encode, EncodePem};
 use serde::{Deserialize, Serialize};
@@ -23,8 +23,8 @@ use crate::module::Module;
 use crate::util::attribute::{AttributeMap, AttributeType, KeyType, MechanismType, ObjectClass};
 use crate::util::helper;
 
-// ML-DSA-65 OID: 2.16.840.1.101.3.4.3.18
-const OID_MLDSA_65: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.18");
+// ML-DSA-87 OID: 2.16.840.1.101.3.4.3.19
+const OID_MLDSA_87: ObjectIdentifier = ObjectIdentifier::new_unwrap("2.16.840.1.101.3.4.3.19");
 
 #[derive(clap::Args, Debug, Serialize, Deserialize)]
 pub struct ExportCsr {
@@ -74,7 +74,7 @@ impl ExportCsr {
 
         // Create CertReqInfo
         let algorithm = AlgorithmIdentifierOwned {
-            oid: OID_MLDSA_65,
+            oid: OID_MLDSA_87,
             parameters: None,
         };
         let subject_public_key_info = SubjectPublicKeyInfoOwned {
@@ -95,7 +95,7 @@ impl ExportCsr {
 
         // Sign the request using HSM
         // Using VendorDefinedMechanism for MLDSA signature generation
-        // to avoid type mismatch with native Mechanism::MlDsa if params are tricky.
+        // to avoid type mismatch with native Mechanism::Mldsa if params are tricky.
         let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
             MechanismType::Mldsa.try_into()?,
             None,
