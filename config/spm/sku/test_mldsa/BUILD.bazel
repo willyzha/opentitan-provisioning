@@ -32,7 +32,7 @@ hsm_certificate_authority_intermediate_mldsa(
 
 hsm_certgen(
     name = "ca_int_dice",
-    ca_key = "//config/spm/sku/eg/common:opentitan-ca-root-v0",
+    ca_key = "//config/spm/sku/eg/common:test_mldsa-root-key-mldsa-v0",
     config = ":ca_int_dice.conf",
     key = ":test_mldsa-dice-key-mldsa-v0",
 )
@@ -46,7 +46,7 @@ hsm_certgen(
 
 hsm_certgen(
     name = "ca_int_ext_mldsa",
-    ca_key = "//config/spm/sku/eg/common:opentitan-ca-root-v0",
+    ca_key = "//config/spm/sku/eg/common:test_mldsa-root-key-mldsa-v0",
     config = ":ca_int_ext.conf",
     key = ":test_mldsa-ext-key-mldsa-v0",
 )
