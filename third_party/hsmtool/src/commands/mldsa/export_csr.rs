@@ -43,7 +43,7 @@ impl ExportCsr {
         // Find the private key
         let mut attrs = helper::search_spec(self.id.as_deref(), self.label.as_deref())?;
         attrs.push(Attribute::Class(ObjectClass::PrivateKey.try_into()?));
-        attrs.push(Attribute::KeyType(KeyType::Mldsa.try_into()?));
+        attrs.push(Attribute::KeyType(KeyType::MlDsa.try_into()?));
         let private_key = helper::find_one_object(session, &attrs)?;
 
         // Determine public key label
@@ -61,7 +61,7 @@ impl ExportCsr {
         // Find the public key (needed for CSR)
         let mut pub_attrs = helper::search_spec(self.id.as_deref(), pub_label)?;
         pub_attrs.push(Attribute::Class(ObjectClass::PublicKey.try_into()?));
-        pub_attrs.push(Attribute::KeyType(KeyType::Mldsa.try_into()?));
+        pub_attrs.push(Attribute::KeyType(KeyType::MlDsa.try_into()?));
         let public_key = helper::find_one_object(session, &pub_attrs)?;
 
         // Get public key value
@@ -97,7 +97,7 @@ impl ExportCsr {
         // Using VendorDefinedMechanism for MLDSA signature generation
         // to avoid type mismatch with native Mechanism::Mldsa if params are tricky.
         let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
-            MechanismType::Mldsa.try_into()?,
+            MechanismType::MlDsa.try_into()?,
             None,
         ));
         

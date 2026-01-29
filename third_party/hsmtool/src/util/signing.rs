@@ -98,7 +98,7 @@ impl SignData {
                 // Data is a slice of plaintext: hash.
                 SignData::Slice(a, b) => Self::data_plain_text(&input[*a..*b]),
             },
-            KeyType::Mldsa => match self {
+            KeyType::MlDsa => match self {
                 // Data is plaintext: hash.
                 SignData::PlainText => Self::data_plain_text(input),
                 // Data is already hashed: no transformation needed.
@@ -170,9 +170,9 @@ impl SignData {
                 SignData::Raw => Ok(Mechanism::Ecdsa),
                 SignData::Slice(_, _) => Ok(Mechanism::Ecdsa),
             },
-            KeyType::Mldsa => {
+            KeyType::MlDsa => {
                 let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
-                    MechanismType::Mldsa.try_into()?,
+                    MechanismType::MlDsa.try_into()?,
                     None,
                 ));
                 match self {
