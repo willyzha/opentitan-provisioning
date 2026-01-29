@@ -191,6 +191,7 @@ certgen () {
   fi
   certvars+=(
     PKCS11_MODULE_PATH="${FLAGS_HSMTOOL_MODULE}"
+    PKCS11_PROVIDER_MODULE="${FLAGS_HSMTOOL_MODULE}"
   )
 
   # Check if we should use Gem engine or PKCS#11 provider.
@@ -250,7 +251,7 @@ certgen () {
            HSMTOOL_CMD="${HSMTOOL_BIN}"
         fi
 
-        "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
+        env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
             mldsa export-csr --label "${ca_key}" --subject "${SUBJ}" --output "${CSR_FILE}"
     else
         # Use Engine for others (ECDSA/RSA)
@@ -290,14 +291,23 @@ certgen () {
         -extensions v3_ca \
         -signkey "${ENDORSING_KEY}"
     elif is_mldsa_key "${endorsing_key}"; then
-        env "${certvars[@]}" \
-        openssl x509 -req -provider pkcs11 -provider default \
-        -in "${CSR_FILE}" \
-        -out "${CERT_FILE}" \
-        -days 7300 \
-        -extfile "${CONFIG_FILE}" \
-        -extensions v3_ca \
-        -signkey "${ENDORSING_KEY}"
+        # Use hsmtool for MLDSA self-signed root generation.
+        C=$(grep "^C=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        ST=$(grep "^ST=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        O=$(grep "^O=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        OU=$(grep "^OU=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        CN=$(grep "^CN=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
+        SUBJ="C=${C},ST=${ST},O=${O},OU=${OU},CN=${CN}"
+
+        HSMTOOL_CMD="hsmtool"
+        if [[ -x "third_party/hsmtool/hsmtool" ]]; then
+           HSMTOOL_CMD="./third_party/hsmtool/hsmtool"
+        elif [[ -n "${HSMTOOL_BIN}" ]]; then
+           HSMTOOL_CMD="${HSMTOOL_BIN}"
+        fi
+
+        env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
+            mldsa export-cert --label "${ca_key}" --subject "${SUBJ}" --output "${CERT_FILE}" --days 7300
     else
         env "${certvars[@]}" \
         openssl x509 -req -engine "pkcs11" -keyform engine \
@@ -329,15 +339,15 @@ certgen () {
         -CAkeyform engine \
         -CAkey "${ENDORSING_KEY}"
     elif is_mldsa_key "${endorsing_key}"; then
-        env "${certvars[@]}" \
-        openssl x509 -req -provider pkcs11 -provider default \
-        -in "${CSR_FILE}" \
-        -out "${CERT_FILE}" \
-        -days 7300 \
-        -extfile "${CONFIG_FILE}" \
-        -extensions v3_ca \
-        -CA "${CA_ENDORSING_CERT_FILE}" \
-        -CAkey "${ENDORSING_KEY}"
+        HSMTOOL_CMD="hsmtool"
+        if [[ -x "third_party/hsmtool/hsmtool" ]]; then
+           HSMTOOL_CMD="./third_party/hsmtool/hsmtool"
+        elif [[ -n "${HSMTOOL_BIN}" ]]; then
+           HSMTOOL_CMD="${HSMTOOL_BIN}"
+        fi
+        
+        env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
+            mldsa endorse-cert --label "${endorsing_key}" --csr "${CSR_FILE}" --ca-cert "${CA_ENDORSING_CERT_FILE}" --output "${CERT_FILE}" --days 7300
     else
         env "${certvars[@]}" \
         openssl x509 -req -engine "pkcs11" -keyform engine \

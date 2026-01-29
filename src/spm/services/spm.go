@@ -365,6 +365,8 @@ func (s *server) GetCaCerts(ctx context.Context, request *pbp.GetCaCertsRequest)
 			kl = "SigningKey/Ext/v0"
 		} else if label == "root" {
 			kl = "RootCA"
+		} else if label == "ca_root_mldsa" {
+			kl = "RootCAMldsa"
 		} else {
 			return nil, status.Errorf(codes.NotFound, "unable to find certificate for key: %q. ", label)
 		}

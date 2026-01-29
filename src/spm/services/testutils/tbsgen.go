@@ -31,12 +31,12 @@ func computeSKI(pubKey crypto.PublicKey) ([]byte, error) {
 }
 
 // patchTBSAlg patches the TBS certificate bytes to replace the ECDSA-SHA256 OID
-// with MLDSA-65 OID.
+// with MLDSA-87 OID.
 func patchTBSAlg(tbs []byte) ([]byte, error) {
 	// ECDSA-SHA256 OID: 1.2.840.10045.4.3.2 -> 06 08 2A 86 48 CE 3D 04 03 02
-	// MLDSA-65 OID: 2.16.840.1.101.3.4.3.18 -> 06 09 60 86 48 01 65 03 04 03 12
+	// MLDSA-87 OID: 2.16.840.1.101.3.4.3.19 -> 06 09 60 86 48 01 65 03 04 03 13
 	ecdsaOID := []byte{0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x04, 0x03, 0x02}
-	mldsaOID := []byte{0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x12}
+	mldsaOID := []byte{0x06, 0x09, 0x60, 0x86, 0x48, 0x01, 0x65, 0x03, 0x04, 0x03, 0x13}
 
 	// Find ECDSA OID
 	idx := -1

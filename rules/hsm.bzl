@@ -1069,6 +1069,35 @@ def hsm_certificate_authority_root(name, curve):
         type = "ecdsa",
     )
 
+def hsm_certificate_authority_root_mldsa(name):
+    """Creates a root certificate authority key for MLDSA.
+
+    Args:
+        name: The name of the certificate authority key.
+    """
+    hsm_key_template(
+        name = name,
+        export_public_only = True,
+        keygen_params = hsmtool_mldsa_keygen(
+            extractable = False,
+            label = name,
+            private_template = {
+                "CKA_LABEL": name + ".priv",
+                "CKA_SIGN": True,
+                "CKA_TOKEN": True,
+                "CKA_EXTRACTABLE": False,
+                "CKA_SENSITIVE": True,
+            },
+            public_template = {
+                "CKA_LABEL": name + ".pub",
+                "CKA_VERIFY": True,
+                "CKA_TOKEN": True,
+            },
+            wrapping = False,
+        ),
+        type = "mldsa",
+    )
+
 def hsm_certificate_authority_intermediate(name, curve):
     hsm_key_template(
         name = name,

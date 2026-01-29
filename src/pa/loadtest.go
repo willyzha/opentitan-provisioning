@@ -9,9 +9,11 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
+	"encoding/pem"
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -172,7 +174,7 @@ func buildCaSubjectKeysJSON(keys [][]byte) ([]byte, error) {
 	return json.Marshal(caKeys)
 }
 
-func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututils.Dut) error {
+func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututils.Dut, printChain bool) error {
 	md := metadata.Pairs("user_id", strconv.Itoa(c.id), "authorization", c.auth_token)
 	client_ctx := metadata.NewOutgoingContext(ctx, md)
 
@@ -303,7 +305,7 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 					KeyLabel: tbsCert.KeyLabel,
 					Key: &pbc.SigningKeyParams_MldsaParams{
 						MldsaParams: &pbm.MldsaParams{
-							ParamSets: pbm.MldsaParameterSets_MLDSA_PARAMETER_SETS_MLDSA_65,
+							ParamSets: pbm.MldsaParameterSets_MLDSA_PARAMETER_SETS_MLDSA_87,
 						},
 					},
 				},
@@ -345,13 +347,51 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	} else {
 		caCertLabels = []string{"dice", "ext", "root"}
 	}
+	if *enableMLDSA {
+		caCertLabels = append(caCertLabels, "ca_root_mldsa")
+		caCertLabels = append(caCertLabels, "dice_mldsa")
+	}
 	caCertsReq := &pbp.GetCaCertsRequest{
 		Sku:        skuName,
 		CertLabels: caCertLabels,
 	}
-	_, err = c.client.GetCaCerts(client_ctx, caCertsReq)
+	caCertsResp, err := c.client.GetCaCerts(client_ctx, caCertsReq)
 	if err != nil {
 		return fmt.Errorf("failed to get CA certificates: %w", err)
+	}
+
+	if printChain {
+		fmt.Println("----- Certificate Chain -----")
+		printCert := func(label string, data []byte) {
+			if len(data) == 0 {
+				return
+			}
+			// Check if already PEM
+			if data[0] == '-' {
+				fmt.Printf("Certificate: %s\n%s\n", label, string(data))
+				return
+			}
+			block := &pem.Block{
+				Type:  "CERTIFICATE",
+				Bytes: data,
+			}
+			fmt.Printf("Certificate: %s\n", label)
+			if err := pem.Encode(os.Stdout, block); err != nil {
+				log.Printf("Failed to encode cert: %v", err)
+			}
+		}
+
+		for _, cert := range endorsedCerts.Certs {
+			printCert(cert.KeyLabel, cert.Cert.Blob)
+		}
+		for i, cert := range caCertsResp.Certs {
+			label := "unknown"
+			if i < len(caCertLabels) {
+				label = caCertLabels[i]
+			}
+			printCert(label, cert.Blob)
+		}
+		fmt.Println("----- End Certificate Chain -----")
 	}
 
 	// Build and send the perso blob back to the DUT.
@@ -409,7 +449,8 @@ func testManufacturingFlow(ctx context.Context, numDuts int, skuName string, c *
 	for i := 0; i < numDuts; i++ {
 		dut := duts[i]
 		log.Printf("client %d processing DUT %x", c.id, dut.DeviceID.Raw[:])
-		err := processDut(ctx, c, skuName, dut)
+		printChain := (c.id == 0 && i == 0)
+		err := processDut(ctx, c, skuName, dut, printChain)
 		c.results <- &callResult{id: c.id, err: err}
 	}
 }
