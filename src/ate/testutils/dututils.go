@@ -35,7 +35,7 @@ import (
 )
 
 // From ate_api.h
-const KPersoBlobMaxSize = 32768
+const KPersoBlobMaxSize = 65536
 
 // Simulated hardware delays
 const (
