@@ -78,7 +78,7 @@ impl Dispatch for Export {
     ) -> Result<Box<dyn erased_serde::Serialize>> {
         let session = session.ok_or(HsmError::SessionRequired)?;
         let mut attrs = helper::search_spec(self.id.as_deref(), self.label.as_deref())?;
-        attrs.push(Attribute::KeyType(KeyType::Mldsa.try_into()?));
+        attrs.push(Attribute::KeyType(KeyType::MlDsa.try_into()?));
         if self.private {
             attrs.push(Attribute::Class(ObjectClass::PrivateKey.try_into()?));
         } else {

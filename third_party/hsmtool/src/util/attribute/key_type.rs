@@ -148,7 +148,7 @@ pub enum KeyType {
     #[serde(rename = "CKK_VENDOR_DEFINED")]
     VendorDefined = CKK_VENDOR_DEFINED,
     #[serde(rename = "CKK_MLDSA")]
-    Mldsa = 0x4A,
+    MlDsa = 0x4A,
     #[num_enum(catch_all)]
     UnknownKeyType(u64) = u64::MAX,
 }

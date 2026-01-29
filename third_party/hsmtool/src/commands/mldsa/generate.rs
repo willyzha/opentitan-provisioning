@@ -15,6 +15,10 @@ use crate::module::Module;
 use crate::util::attribute::{AttrData, AttributeMap, AttributeType};
 use crate::util::helper;
 
+fn default_mldsa_type() -> u64 {
+    3
+}
+
 #[derive(clap::Args, Debug, Serialize, Deserialize)]
 pub struct Generate {
     #[arg(long)]
@@ -26,6 +30,10 @@ pub struct Generate {
     /// Permit the generated key to be extractable.
     #[arg(long)]
     extractable: bool,
+    /// MLDSA algorithm type (e.g. 3 for MLDSA 87).
+    #[arg(long, default_value = "3")]
+    #[serde(default = "default_mldsa_type")]
+    mldsa_type: u64,
     /// Template for creating the public key.
     #[arg(long)]
     public_template: Option<AttributeMap>,
@@ -38,7 +46,6 @@ impl Generate {
     const PUBLIC_TEMPLATE: &str = r#"{
         "CKA_CLASS": "CKO_PUBLIC_KEY",
         "CKA_KEY_TYPE": "CKK_MLDSA",
-        "CKA_PARAMETER_SET": 3,
         "CKA_TOKEN": true,
         "CKA_VERIFY": true
     }"#;
@@ -78,6 +85,8 @@ impl Dispatch for Generate {
             AttributeMap::from_str(Self::PRIVATE_TEMPLATE).expect("error in PRIVATE_TEMPLATE");
         public_template.insert(AttributeType::Id, id.clone());
         public_template.insert(AttributeType::Label, result.label.clone());
+        public_template.insert(AttributeType::ParameterSet, AttrData::from(self.mldsa_type));
+
         if let Some(tpl) = &self.public_template {
             public_template.merge(tpl.clone());
         }
