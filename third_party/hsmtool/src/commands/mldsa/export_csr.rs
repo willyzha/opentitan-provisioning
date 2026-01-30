@@ -11,6 +11,7 @@ use cryptoki::session::Session;
 use der::{Encode, EncodePem};
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
 use x509_cert::name::Name;
@@ -95,7 +96,7 @@ impl ExportCsr {
 
         // Sign the request using HSM
         // Using VendorDefinedMechanism for MLDSA signature generation
-        // to avoid type mismatch with native Mechanism::Mldsa if params are tricky.
+        // to avoid type mismatch with native Mechanism::MlDsa if params are tricky.
         let mechanism = Mechanism::VendorDefined(VendorDefinedMechanism::new::<()>(
             MechanismType::MlDsa.try_into()?,
             None,
@@ -117,7 +118,7 @@ impl ExportCsr {
         let pem = cert_req.to_pem(Default::default())
             .map_err(|e| anyhow!("Failed to encode CSR to PEM: {}", e))?;
 
-        helper::write_file(&self.output, pem.as_bytes())?;
+        fs::write(&self.output, pem.as_bytes())?;
 
         Ok(())
     }

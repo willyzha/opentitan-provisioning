@@ -7,6 +7,7 @@ use cryptoki::object::ObjectHandle;
 use cryptoki::session::Session;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::fs;
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -59,7 +60,7 @@ impl Import {
     }"#;
 
     fn import(&self, session: &Session, id: AttrData, label: AttrData) -> Result<ObjectHandle> {
-        let data = helper::read_file(&self.filename)?;
+        let data = fs::read(&self.filename)?;
         let key_value = if let Ok((_label, bytes)) = pem_rfc7468::decode_vec(&data) {
              bytes
         } else {
@@ -116,7 +117,7 @@ impl Import {
             template.merge(tpl.clone());
         }
 
-        let wrapped_data = helper::read_file(&self.filename)?;
+        let wrapped_data = fs::read(&self.filename)?;
         wrapper.unwrap(session, &wrapped_data, self.unwrap.as_deref(), &template)
     }
 }

@@ -7,6 +7,7 @@ use cryptoki::object::{Attribute, ObjectHandle};
 use cryptoki::session::Session;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
+use std::fs;
 use std::path::PathBuf;
 
 use crate::commands::{BasicResult, Dispatch};
@@ -45,12 +46,12 @@ impl Export {
 
         match self.format {
             KeyEncoding::Der | KeyEncoding::Pkcs8Der => {
-                helper::write_file(&self.filename, &key_value)?;
+                fs::write(&self.filename, &key_value)?;
             }
             KeyEncoding::Pem | KeyEncoding::Pkcs8Pem => {
                 let label = if self.private { "PRIVATE KEY" } else { "PUBLIC KEY" };
                 let pem = pem_rfc7468::encode_string(label, pem_rfc7468::LineEnding::LF, &key_value)?;
-                helper::write_file(&self.filename, pem.as_bytes())?;
+                fs::write(&self.filename, pem.as_bytes())?;
             }
              _ => return Err(anyhow!("Unsupported format for MLDSA export")),
         }
@@ -63,7 +64,7 @@ impl Export {
             .ok_or(anyhow!("wrap_mechanism is required when wrap is specified"))?
             .into();
         let wrapped = wrapper.wrap(session, object, self.wrap.as_deref())?;
-        helper::write_file(&self.filename, &wrapped)?;
+        fs::write(&self.filename, &wrapped)?;
         Ok(())
     }
 }
