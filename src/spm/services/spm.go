@@ -363,6 +363,8 @@ func (s *server) GetCaCerts(ctx context.Context, request *pbp.GetCaCertsRequest)
 			kl = "SigningKey/Dice/Mldsa/v0"
 		} else if label == "ext" {
 			kl = "SigningKey/Ext/v0"
+		} else if label == "ext_mldsa" {
+			kl = "SigningKey/Ext/Mldsa/v0"
 		} else if label == "root" {
 			kl = "RootCA"
 		} else if label == "ca_root_mldsa" {

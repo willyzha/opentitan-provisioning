@@ -9,11 +9,9 @@ import (
 	"context"
 	"encoding/binary"
 	"encoding/json"
-	"encoding/pem"
 	"flag"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -350,6 +348,7 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	if *enableMLDSA {
 		caCertLabels = append(caCertLabels, "ca_root_mldsa")
 		caCertLabels = append(caCertLabels, "dice_mldsa")
+		caCertLabels = append(caCertLabels, "ext_mldsa")
 	}
 	caCertsReq := &pbp.GetCaCertsRequest{
 		Sku:        skuName,
@@ -358,40 +357,6 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	caCertsResp, err := c.client.GetCaCerts(client_ctx, caCertsReq)
 	if err != nil {
 		return fmt.Errorf("failed to get CA certificates: %w", err)
-	}
-
-	if printChain {
-		fmt.Println("----- Certificate Chain -----")
-		printCert := func(label string, data []byte) {
-			if len(data) == 0 {
-				return
-			}
-			// Check if already PEM
-			if data[0] == '-' {
-				fmt.Printf("Certificate: %s\n%s\n", label, string(data))
-				return
-			}
-			block := &pem.Block{
-				Type:  "CERTIFICATE",
-				Bytes: data,
-			}
-			fmt.Printf("Certificate: %s\n", label)
-			if err := pem.Encode(os.Stdout, block); err != nil {
-				log.Printf("Failed to encode cert: %v", err)
-			}
-		}
-
-		for _, cert := range endorsedCerts.Certs {
-			printCert(cert.KeyLabel, cert.Cert.Blob)
-		}
-		for i, cert := range caCertsResp.Certs {
-			label := "unknown"
-			if i < len(caCertLabels) {
-				label = caCertLabels[i]
-			}
-			printCert(label, cert.Blob)
-		}
-		fmt.Println("----- End Certificate Chain -----")
 	}
 
 	// Build and send the perso blob back to the DUT.
