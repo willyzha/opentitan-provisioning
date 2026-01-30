@@ -221,6 +221,7 @@ def hsmtool_mldsa_keygen(label, wrapping, extractable, public_template = {}, pri
     return json.encode_indent({
         "command": "mldsa-generate",
         "label": label,
+        "domain": "Pure",
         "wrapping": wrapping,
         "extractable": extractable,
         "public_template": public_template,

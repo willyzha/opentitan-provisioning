@@ -17,6 +17,16 @@ use crate::error::HsmError;
 use crate::util::attribute::{KeyType, MechanismType};
 use crate::util::helper::parse_range;
 
+/// Specify the ML-DSA domain.
+#[derive(clap::ValueEnum, Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[value(rename_all = "kebab-case")]
+pub enum MlDsaDomain {
+    /// Pure ML-DSA (sign the message directly).
+    Pure,
+    /// Pre-hashed ML-DSA (sign a hash of the message).
+    PreHashed,
+}
+
 /// Specify the type of data being signed or verified.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SignData {
@@ -113,6 +123,27 @@ impl SignData {
                 SignData::Slice(a, b) => Self::data_plain_text(&input[*a..*b]),
             },
             _ => Err(HsmError::Unsupported(format!("SignData prepare for {keytype:?}")).into()),
+        }
+    }
+
+    pub fn mldsa_prepare(&self, domain: MlDsaDomain, input: &[u8]) -> Result<Vec<u8>> {
+        match self {
+            SignData::PlainText => {
+                match domain {
+                    MlDsaDomain::Pure => Ok(input.into()),
+                    MlDsaDomain::PreHashed => Ok(Sha256::digest(input).as_slice().to_vec()),
+                }
+            }
+            SignData::Sha256Hash => Ok(input.into()),
+            SignData::Sha256HashReversed => Self::data_raw(input, true),
+            SignData::Raw => Ok(input.into()),
+            SignData::Slice(a, b) => {
+                let input = &input[*a..*b];
+                match domain {
+                    MlDsaDomain::Pure => Ok(input.into()),
+                    MlDsaDomain::PreHashed => Ok(Sha256::digest(input).as_slice().to_vec()),
+                }
+            }
         }
     }
 
