@@ -307,7 +307,7 @@ certgen () {
         fi
 
         env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
-            mldsa export-cert --label "${ca_key}" --subject "${SUBJ}" --output "${CERT_FILE}" --days 7300
+            mldsa endorse-cert --label "${ca_key}" --subject "${SUBJ}" --output "${CERT_FILE}" --days 7300
     else
         env "${certvars[@]}" \
         openssl x509 -req -engine "pkcs11" -keyform engine \

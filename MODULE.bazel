@@ -84,9 +84,16 @@ http_archive(
     patch_cmds = [
         "find . -type f \\( -name BUILD -o -name \"*.bazel\" -o -name \"*.bzl\" \\) -exec sed -i 's|@crate_index|@hsmtool_head_index|g' {} +",
         "sed -i '1s/^/#![feature(let_chains)]\\n/' sw/host/hsmtool/src/lib.rs",
+        "sed -i 's|\"src/commands/mldsa/export.rs\",|\"src/commands/mldsa/endorse_cert.rs\",\\n        \"src/commands/mldsa/export_cert.rs\",\\n        \"src/commands/mldsa/export.rs\",|g' sw/host/hsmtool/BUILD",
+        "sed -i 's|use sha1::{Digest, Sha1};|use sha2::{Digest, Sha256};|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
+        "sed -i 's|Sha1::new()|Sha256::new()|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
+        "sed -i 's|let aki_bytes = hasher_ca.finalize();|let aki_bytes = hasher_ca.finalize();\\n        let aki_bytes = \\&aki_bytes[0..20];|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs",
+        "sed -i 's|let ski_bytes = hasher.finalize();|let ski_bytes = hasher.finalize();\\n        let ski_bytes = \\&ski_bytes[0..20];|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
+        "sed -i 's|ski_bytes.as_slice()|ski_bytes|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
+        "sed -i 's|aki_bytes.as_slice()|aki_bytes|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs",
     ],
-    strip_prefix = "opentitan-70e4060e8ada72db496af76b3a899268902c33f2",
-    urls = ["https://github.com/lowRISC/opentitan/archive/70e4060e8ada72db496af76b3a899268902c33f2.tar.gz"],
+    strip_prefix = "opentitan-d368e4a060973b13f243100c6d1aef05487c7bb6",
+    urls = ["https://github.com/willyzha/opentitan/archive/d368e4a060973b13f243100c6d1aef05487c7bb6.tar.gz"],
 )
 
 # -------------------------------------------------------------------------
