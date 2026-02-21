@@ -354,7 +354,7 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 		Sku:        skuName,
 		CertLabels: caCertLabels,
 	}
-	caCertsResp, err := c.client.GetCaCerts(client_ctx, caCertsReq)
+	_, err = c.client.GetCaCerts(client_ctx, caCertsReq)
 	if err != nil {
 		return fmt.Errorf("failed to get CA certificates: %w", err)
 	}
