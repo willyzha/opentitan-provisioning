@@ -420,7 +420,7 @@ http_archive(
 # Sphincs+ (Vendored)
 # -------------------------------------------------------------------------
 
-sphincsplus = use_extension("//third_party/sphincsplus_repo:extensions.bzl", "sphincsplus")
+sphincsplus = use_extension("@lowrisc_opentitan//third_party/sphincsplus:extensions.bzl", "sphincsplus")
 use_repo(
     sphincsplus,
     "sphincsplus_fips205_ipd",
@@ -432,5 +432,10 @@ use_repo(
 # Rust Extensions
 # -------------------------------------------------------------------------
 
-serde_annotate = use_extension("//third_party/rust:extensions.bzl", "serde_annotate")
-use_repo(serde_annotate, "lowrisc_serde_annotate")
+http_archive(
+    name = "lowrisc_serde_annotate",
+    integrity = "sha256-pT+WAj/aVJADXzwHjNmKXIDh+7yWiy8ti8dENmDb7z4=",
+    strip_prefix = "serde-annotate-0.0.13",
+    url = "https://github.com/lowRISC/serde-annotate/archive/refs/tags/v0.0.13.tar.gz",
+    patch_cmds = ["find . -type f \\( -name BUILD -o -name \"*.bazel\" -o -name \"*.bzl\" \\) -exec sed -i 's|@crate_index|@hsmtool_head_index|g' {} +"],
+)

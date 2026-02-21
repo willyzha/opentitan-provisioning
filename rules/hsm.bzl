@@ -822,7 +822,7 @@ hsm_certgen_script = rule(
             allow_single_file = True,
         ),
         "_hsmtool": attr.label(
-            default = "//third_party/hsmtool",
+            default = "@lowrisc_opentitan_head//sw/host/hsmtool",
             allow_single_file = True,
             cfg = "exec",
             executable = True,
