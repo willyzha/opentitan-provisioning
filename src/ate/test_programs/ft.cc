@@ -369,7 +369,7 @@ int main(int argc, char** argv) {
         "dice",
     };
     if (GetCaCerts(ate_client, absl::GetFlag(FLAGS_sku).c_str(),
-                   /*count=*/kNumIcas, kDiceCaCertLabels, dice_ca_certs) != 0) {
+                   /*count=*/kNumDiceCaCerts, kDiceCaCertLabels, dice_ca_certs) != 0) {
       LOG(ERROR) << "GetCaCerts failed.";
       return -1;
     }
