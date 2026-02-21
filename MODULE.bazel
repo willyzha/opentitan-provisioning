@@ -26,9 +26,7 @@ bazel_dep(name = "rules_swift", version = "2.1.1", repo_name = "build_bazel_rule
 bazel_dep(name = "rules_cc", version = "0.1.2")
 bazel_dep(name = "rules_pkg", version = "1.0.1")
 bazel_dep(name = "rules_proto", version = "7.0.2")
-
 bazel_dep(name = "aspect_rules_lint", version = "1.0.8")
-
 bazel_dep(name = "rules_foreign_cc", version = "0.9.0")
 single_version_override(
     module_name = "rules_foreign_cc",
@@ -81,19 +79,13 @@ archive_override(
 # OpenTitan at HEAD for hsmtool
 http_archive(
     name = "lowrisc_opentitan_head",
+    integrity = "sha256-FDGAr+6VAVnlMet3TA9f0gX3Ho/0zkogaIpXD/GMFgg=",
     patch_cmds = [
         "find . -type f \\( -name BUILD -o -name \"*.bazel\" -o -name \"*.bzl\" \\) -exec sed -i 's|@crate_index|@hsmtool_head_index|g' {} +",
         "sed -i '1s/^/#![feature(let_chains)]\\n/' sw/host/hsmtool/src/lib.rs",
-        "sed -i 's|\"src/commands/mldsa/export.rs\",|\"src/commands/mldsa/endorse_cert.rs\",\\n        \"src/commands/mldsa/export_cert.rs\",\\n        \"src/commands/mldsa/export.rs\",|g' sw/host/hsmtool/BUILD",
-        "sed -i 's|use sha1::{Digest, Sha1};|use sha2::{Digest, Sha256};|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
-        "sed -i 's|Sha1::new()|Sha256::new()|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
-        "sed -i 's|let aki_bytes = hasher_ca.finalize();|let aki_bytes = hasher_ca.finalize();\\n        let aki_bytes = \\&aki_bytes[0..20];|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs",
-        "sed -i 's|let ski_bytes = hasher.finalize();|let ski_bytes = hasher.finalize();\\n        let ski_bytes = \\&ski_bytes[0..20];|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
-        "sed -i 's|ski_bytes.as_slice()|ski_bytes|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs sw/host/hsmtool/src/commands/mldsa/export_cert.rs",
-        "sed -i 's|aki_bytes.as_slice()|aki_bytes|g' sw/host/hsmtool/src/commands/mldsa/endorse_cert.rs",
     ],
-    strip_prefix = "opentitan-d368e4a060973b13f243100c6d1aef05487c7bb6",
-    urls = ["https://github.com/willyzha/opentitan/archive/d368e4a060973b13f243100c6d1aef05487c7bb6.tar.gz"],
+    strip_prefix = "opentitan-9d860390d78396493feaf5649d4237c11cb26310",
+    urls = ["https://github.com/willyzha/opentitan/archive/9d860390d78396493feaf5649d4237c11cb26310.tar.gz"],
 )
 
 # -------------------------------------------------------------------------
@@ -116,7 +108,8 @@ llvm.toolchain(
     name = "llvm_toolchain_lint",
     llvm_versions = {"": "14.0.0"},
 )
-use_repo(llvm, "llvm_toolchain_llvm", "llvm_toolchain_host", "llvm_toolchain_lint")
+use_repo(llvm, "llvm_toolchain_host", "llvm_toolchain_lint", "llvm_toolchain_llvm")
+
 register_toolchains("@llvm_toolchain_host//:all")
 
 # -------------------------------------------------------------------------
@@ -134,6 +127,7 @@ bazel_dep(name = "gazelle", version = "0.41.0", repo_name = "bazel_gazelle")
 go_sdk = use_extension("@io_bazel_rules_go//go:extensions.bzl", "go_sdk")
 go_sdk.download(version = "1.24.0")
 use_repo(go_sdk, "go_default_sdk")
+
 register_toolchains("@go_default_sdk//:all")
 
 go_deps = use_extension("@bazel_gazelle//:extensions.bzl", "go_deps")
@@ -207,6 +201,7 @@ python.toolchain(
     python_version = "3.9",
 )
 use_repo(python, "pythons_hub")
+
 register_toolchains("@pythons_hub//:all")
 
 use_repo(python, python3 = "python_3_9", python3_host = "python_3_9_host")
@@ -217,6 +212,7 @@ use_repo(python, python3 = "python_3_9", python3_host = "python_3_9_host")
 
 bazel_dep(name = "rules_rust", version = "0.59.2")
 bazel_dep(name = "rules_rust_bindgen", version = "0.59.2")
+
 single_version_override(
     module_name = "rules_rust",
     patch_strip = 0,
@@ -250,7 +246,6 @@ crate.from_cargo(
     manifests = ["@lowrisc_opentitan_head//third_party/rust:Cargo.toml"],
     supported_platform_triples = ["x86_64-unknown-linux-gnu"],
 )
-
 crate.annotation(
     crate = "cryptoki",
     repositories = ["hsmtool_head_index"],
@@ -280,8 +275,8 @@ crate.annotation(
     crate = "openssl-sys",
     repositories = ["hsmtool_head_index"],
 )
+use_repo(crate, "crate_index", "hsmtool_head_index", "provisioning_index")
 
-use_repo(crate, "crate_index", "provisioning_index", "hsmtool_head_index")
 register_toolchains("@lowrisc_opentitan//third_party/rust:bindgen_toolchain")
 
 # -------------------------------------------------------------------------
@@ -301,7 +296,6 @@ archive_override(
 # Vendor & Local Extensions
 # -------------------------------------------------------------------------
 
-
 vendor_deps = use_extension("//rules:vendor.bzl", "vendor_deps")
 use_repo(vendor_deps, "vendor_repo")
 
@@ -314,6 +308,7 @@ use_repo(lint_deps, "bazelbuild_buildtools", "clang-format", "protolint")
 
 docker = use_extension("//third_party/docker:extensions.bzl", "docker_extension")
 use_repo(docker, "container_k8s_pause", "container_softhsm2", "docker_config", "go_image_base", "go_image_static")
+
 register_toolchains("//config/containers:docker_toolchain")
 
 http_file = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_file")
@@ -442,7 +437,7 @@ use_repo(
 http_archive(
     name = "lowrisc_serde_annotate",
     integrity = "sha256-pT+WAj/aVJADXzwHjNmKXIDh+7yWiy8ti8dENmDb7z4=",
+    patch_cmds = ["find . -type f \\( -name BUILD -o -name \"*.bazel\" -o -name \"*.bzl\" \\) -exec sed -i 's|@crate_index|@hsmtool_head_index|g' {} +"],
     strip_prefix = "serde-annotate-0.0.13",
     url = "https://github.com/lowRISC/serde-annotate/archive/refs/tags/v0.0.13.tar.gz",
-    patch_cmds = ["find . -type f \\( -name BUILD -o -name \"*.bazel\" -o -name \"*.bzl\" \\) -exec sed -i 's|@crate_index|@hsmtool_head_index|g' {} +"],
 )

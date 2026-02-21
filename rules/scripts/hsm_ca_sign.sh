@@ -279,78 +279,106 @@ certgen () {
     ENDORSING_KEY="${endorsing_key}"
   fi
 
-  if [[ "${ca_key}" == "${endorsing_key}" ]]; then
-    echo "Generating root CA certificate for ${ca_key}"
-    if [ "${USE_GEM}" == true ]; then
-        env "${certvars[@]}" \
-        openssl x509 -req -engine "gem" -keyform engine \
-        -in "${CSR_FILE}" \
-        -out "${CERT_FILE}" \
-        -days 7300 \
-        -extfile "${CONFIG_FILE}" \
-        -extensions v3_ca \
-        -signkey "${ENDORSING_KEY}"
-    elif is_mldsa_key "${endorsing_key}"; then
-        # Use hsmtool for MLDSA self-signed root generation.
-        C=$(grep "^C=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
-        ST=$(grep "^ST=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
-        O=$(grep "^O=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
-        OU=$(grep "^OU=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
-        CN=$(grep "^CN=" "${CONFIG_FILE}" | cut -d= -f2 | tr -d '\r')
-        SUBJ="C=${C},ST=${ST},O=${O},OU=${OU},CN=${CN}"
-
-        HSMTOOL_CMD="hsmtool"
-        if [[ -x "third_party/hsmtool/hsmtool" ]]; then
-           HSMTOOL_CMD="./third_party/hsmtool/hsmtool"
-        elif [[ -n "${HSMTOOL_BIN}" ]]; then
-           HSMTOOL_CMD="${HSMTOOL_BIN}"
-        fi
-
-        env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
-            mldsa endorse-cert --label "${ca_key}" --subject "${SUBJ}" --output "${CERT_FILE}" --days 7300
-    else
-        env "${certvars[@]}" \
-        openssl x509 -req -engine "pkcs11" -keyform engine \
-        -in "${CSR_FILE}" \
-        -out "${CERT_FILE}" \
-        -days 7300 \
-        -extfile "${CONFIG_FILE}" \
-        -extensions v3_ca \
-        -signkey "${ENDORSING_KEY}"
+  if is_mldsa_key "${endorsing_key}"; then
+    HSMTOOL_CMD="hsmtool"
+    if [[ -x "third_party/hsmtool/hsmtool" ]]; then
+       HSMTOOL_CMD="./third_party/hsmtool/hsmtool"
+    elif [[ -n "${HSMTOOL_BIN}" ]]; then
+       HSMTOOL_CMD="${HSMTOOL_BIN}"
     fi
+
+    CERT_UTIL_CMD=""
+    readonly CERT_UTIL_BIN_DEFAULT=@@CERT_UTIL_BIN@@
+    if [[ -n "${CERT_UTIL_BIN}" ]]; then
+       CERT_UTIL_CMD="${CERT_UTIL_BIN}"
+    elif [[ -x "./${CERT_UTIL_BIN_DEFAULT}" ]]; then
+       CERT_UTIL_CMD="./${CERT_UTIL_BIN_DEFAULT}"
+    elif [[ -x "third_party/cert_util/cert-util" ]]; then
+       CERT_UTIL_CMD="./third_party/cert_util/cert-util"
+    elif [[ -x "bazel-bin/src/testing/cert-util/cert-util" ]]; then
+       CERT_UTIL_CMD="bazel-bin/src/testing/cert-util/cert-util"
+    elif [[ -x "$(dirname "$0")/../../bazel-bin/src/testing/cert-util/cert-util" ]]; then
+       CERT_UTIL_CMD="$(dirname "$0")/../../bazel-bin/src/testing/cert-util/cert-util"
+    else
+       # Try to find the workspace root by looking for .otdev
+       curr_dir="$(pwd)"
+       while [[ "${curr_dir}" != "/" ]]; do
+         if [[ -d "${curr_dir}/.otdev" ]]; then
+           if [[ -x "${curr_dir}/bazel-bin/src/testing/cert-util/cert-util" ]]; then
+             CERT_UTIL_CMD="${curr_dir}/bazel-bin/src/testing/cert-util/cert-util"
+             break
+           fi
+         fi
+         curr_dir="$(dirname "${curr_dir}")"
+       done
+    fi
+
+    if [[ -z "${CERT_UTIL_CMD}" ]] && command -v cert-util > /dev/null; then
+       CERT_UTIL_CMD="cert-util"
+    fi
+
+    if [[ -z "${CERT_UTIL_CMD}" ]]; then
+       echo "Error: cert-util not found. Please set CERT_UTIL_BIN or ensure it is built."
+       exit 1
+    fi
+
+    TBS_FILE="${CERT_FILE}.tbs"
+    SIG_FILE="${CERT_FILE}.sig"
+
+    # 1. Generate TBS
+    TBS_ARGS=(tbs --csr "${CSR_FILE}" --output "${TBS_FILE}" --days 7300)
+    if [[ "${ca_key}" != "${endorsing_key}" ]]; then
+        CA_ENDORSING_CERT_FILE="${OUTDIR_CA}/${endorsing_key}.pem"
+        if [[ ! -f "${CA_ENDORSING_CERT_FILE}" ]]; then
+          echo "Error: CA endorsing certificate file ${CA_ENDORSING_CERT_FILE} does not exist."
+          exit 1
+        fi
+        TBS_ARGS+=(--ca-cert "${CA_ENDORSING_CERT_FILE}")
+        echo "Generating TBS for ${ca_key} signed by ${endorsing_key}"
+    else
+        echo "Generating self-signed TBS for root CA ${ca_key}"
+    fi
+    "${CERT_UTIL_CMD}" "${TBS_ARGS[@]}"
+
+    # 2. Sign TBS using HSM
+    echo "Signing TBS for ${ca_key} using HSM key ${endorsing_key}"
+    env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
+        mldsa sign --label "${endorsing_key}" --format raw "${TBS_FILE}" --output "${SIG_FILE}"
+
+    # 3. Assemble final certificate
+    echo "Assembling final certificate for ${ca_key}"
+    "${CERT_UTIL_CMD}" assemble --tbs "${TBS_FILE}" --signature "${SIG_FILE}" --output "${CERT_FILE}"
+    
+    # Cleanup temporary files
+    rm "${TBS_FILE}" "${SIG_FILE}"
   else
-    echo "Generating certificate for ${ca_key} signed by ${endorsing_key}"
-
-    CA_ENDORSING_CERT_FILE="${OUTDIR_CA}/${endorsing_key}.pem"
-    if [[ ! -f "${CA_ENDORSING_CERT_FILE}" ]]; then
-      echo "Error: CA endorsing certificate file ${CA_ENDORSING_CERT_FILE} does not exist."
-      exit 1
+    # Use OpenSSL for others (ECDSA/RSA)
+    ENGINE="pkcs11"
+    if [ "${USE_GEM}" == true ]; then
+        ENGINE="gem"
     fi
 
-    if [ "${USE_GEM}" == true ]; then
+    if [[ "${ca_key}" == "${endorsing_key}" ]]; then
+        echo "Generating root CA certificate for ${ca_key}"
         env "${certvars[@]}" \
-        openssl x509 -req -engine "gem" -keyform engine \
+        openssl x509 -req -engine "${ENGINE}" -keyform engine \
         -in "${CSR_FILE}" \
         -out "${CERT_FILE}" \
         -days 7300 \
         -extfile "${CONFIG_FILE}" \
         -extensions v3_ca \
-        -CA "${CA_ENDORSING_CERT_FILE}" \
-        -CAkeyform engine \
-        -CAkey "${ENDORSING_KEY}"
-    elif is_mldsa_key "${endorsing_key}"; then
-        HSMTOOL_CMD="hsmtool"
-        if [[ -x "third_party/hsmtool/hsmtool" ]]; then
-           HSMTOOL_CMD="./third_party/hsmtool/hsmtool"
-        elif [[ -n "${HSMTOOL_BIN}" ]]; then
-           HSMTOOL_CMD="${HSMTOOL_BIN}"
-        fi
-        
-        env "${certvars[@]}" "${HSMTOOL_CMD}" --module "${FLAGS_HSMTOOL_MODULE}" --token "${FLAGS_HSMTOOL_TOKEN}" --pin "${FLAGS_HSMTOOL_PIN}" \
-            mldsa endorse-cert --label "${endorsing_key}" --csr "${CSR_FILE}" --ca-cert "${CA_ENDORSING_CERT_FILE}" --output "${CERT_FILE}" --days 7300
+        -signkey "${ENDORSING_KEY}"
     else
+        echo "Generating certificate for ${ca_key} signed by ${endorsing_key}"
+
+        CA_ENDORSING_CERT_FILE="${OUTDIR_CA}/${endorsing_key}.pem"
+        if [[ ! -f "${CA_ENDORSING_CERT_FILE}" ]]; then
+          echo "Error: CA endorsing certificate file ${CA_ENDORSING_CERT_FILE} does not exist."
+          exit 1
+        fi
+
         env "${certvars[@]}" \
-        openssl x509 -req -engine "pkcs11" -keyform engine \
+        openssl x509 -req -engine "${ENGINE}" -keyform engine \
         -in "${CSR_FILE}" \
         -out "${CERT_FILE}" \
         -days 7300 \

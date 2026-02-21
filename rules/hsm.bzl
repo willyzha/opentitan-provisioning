@@ -792,6 +792,7 @@ def _hsm_certgen_script_impl(ctx):
         "@@CERTGEN_TEMPLATES@@": " ".join(templates),
         "@@CERTGEN_KEYS@@": " ".join(keys),
         "@@CERTGEN_ENDORSING_KEYS@@": " ".join(endorsing_keys),
+        "@@CERT_UTIL_BIN@@": shell.quote(ctx.executable._cert_util.basename),
     }
 
     ctx.actions.expand_template(
@@ -803,6 +804,7 @@ def _hsm_certgen_script_impl(ctx):
 
     outfiles = [
         ctx.executable._hsmtool,
+        ctx.executable._cert_util,
     ]
 
     return DefaultInfo(
@@ -823,6 +825,12 @@ hsm_certgen_script = rule(
         ),
         "_hsmtool": attr.label(
             default = "@lowrisc_opentitan_head//sw/host/hsmtool",
+            allow_single_file = True,
+            cfg = "exec",
+            executable = True,
+        ),
+        "_cert_util": attr.label(
+            default = "//src/testing/cert-util:cert-util",
             allow_single_file = True,
             cfg = "exec",
             executable = True,
