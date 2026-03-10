@@ -125,6 +125,7 @@ Status AteClient::InitSession(const std::string& sku,
     return result;
   }
   sku_session_token_ = response.sku_session_token();
+  use_v1_blob_ = response.use_v1_blob();
   return Status::OK;
 }
 

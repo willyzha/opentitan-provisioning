@@ -182,7 +182,8 @@ TEST_F(AteJsonTest, CaSubjectKeys) {
   aux_ca_key_id.data[19] = 255;
 
   dut_spi_frame_t frame;
-  EXPECT_EQ(CaSubjectKeysToJson(&dice_ca_key_id, &aux_ca_key_id, &frame), 0);
+  EXPECT_EQ(CaSubjectKeysToJson(&dice_ca_key_id, &aux_ca_key_id, true, &frame),
+            0);
 
   std::string json_string = std::string(reinterpret_cast<char*>(frame.payload),
                                         kDutRxSpiFrameSizeInBytes);
@@ -236,6 +237,7 @@ TEST_F(AteJsonTest, CaSubjectKeys) {
                 ext_auth_key_key_id: 0
                 ext_auth_key_key_id: 0
                 ext_auth_key_key_id: 255
+                use_v1_blob: true
               )pb"));
 }
 

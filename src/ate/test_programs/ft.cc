@@ -271,7 +271,8 @@ int main(int argc, char** argv) {
   const ca_subject_key_t* kDiceCaSk = &key_ids[0];
   const ca_subject_key_t* kExtCaSk = &key_ids[1];
   dut_spi_frame_t ca_key_ids_spi_frame;
-  if (CaSubjectKeysToJson(kDiceCaSk, kExtCaSk, &ca_key_ids_spi_frame) != 0) {
+  if (CaSubjectKeysToJson(kDiceCaSk, kExtCaSk, UseV1Blob(ate_client),
+                          &ca_key_ids_spi_frame) != 0) {
     LOG(ERROR) << "CaSubjectKeysToJson failed.";
     return -1;
   }

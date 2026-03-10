@@ -103,6 +103,9 @@ class AteClient {
   grpc::Status RegisterDevice(pa::RegistrationRequest& request,
                               pa::RegistrationResponse* reply);
 
+  // Returns true if the V1 blob format should be used.
+  bool UseV1Blob() const { return use_v1_blob_; }
+
   // SKU name
   std::string Sku;
 
@@ -113,6 +116,7 @@ class AteClient {
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<pa::ProvisioningApplianceService::StubInterface> stub_;
   std::string sku_session_token_;
+  bool use_v1_blob_ = false;
 };
 
 // overloads operator<< for AteClient::Options objects printouts

@@ -119,16 +119,16 @@ func NewSpmServer(opts Options) (pbs.SpmServiceServer, error) {
 	}, nil
 }
 
-func (s *server) initSku(sku string) (string, error) {
+func (s *server) initSku(sku string) (*skumgr.Sku, string, error) {
 	token, err := generateSessionToken(TokenSize)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate session token: %v", err)
+		return nil, "", fmt.Errorf("failed to generate session token: %v", err)
 	}
-	_, err = s.skuManager.LoadSku(sku)
+	sSku, err := s.skuManager.LoadSku(sku)
 	if err != nil {
-		return "", fmt.Errorf("failed to initialize sku %q: %v", sku, err)
+		return nil, "", fmt.Errorf("failed to initialize sku %q: %v", sku, err)
 	}
-	return token, nil
+	return sSku, token, nil
 }
 
 // findSkuAuth returns an empty sku auth config, if nor sku or a family sku can be found
@@ -168,14 +168,21 @@ func (s *server) InitSession(ctx context.Context, request *pbp.InitSessionReques
 		return nil, status.Errorf(codes.Internal, "authentication config pointer is nil")
 	}
 
-	token, err := s.initSku(request.Sku)
+	sku, token, err := s.initSku(request.Sku)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to initialize sku %q: %v", request.Sku, err)
+	}
+
+	useV1BlobStr, err := sku.Config.GetUnsafeAttribute("UseV1Blob")
+	useV1Blob := false
+	if err == nil && (useV1BlobStr == "true" || useV1BlobStr == "1") {
+		useV1Blob = true
 	}
 
 	return &pbp.InitSessionResponse{
 		SkuSessionToken: token,
 		AuthMethods:     auth.Methods,
+		UseV1Blob:       useV1Blob,
 	}, nil
 }
 

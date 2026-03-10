@@ -65,6 +65,9 @@ message CaSubjectKeysJSON {
   // Required.
   // protolint:disable:next REPEATED_FIELD_NAMES_PLURALIZED
   repeated uint32 ext_auth_key_key_id = 2;
+  // use_v1_blob determines whether the V1 blob format should be used.
+  // Optional.
+  bool use_v1_blob = 3;
 }
 
 // Provides the perso_blob_t data structure used by provisioning firmware.

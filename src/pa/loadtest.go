@@ -72,6 +72,9 @@ type clientTask struct {
 	// RPCs after a session has been opened and authenticated with the
 	// ProvisioningAppliance.
 	auth_token string
+
+	// use_v1_blob determines if V1 blob format should be used.
+	use_v1_blob bool
 }
 
 type callResult struct {
@@ -118,6 +121,7 @@ func (c *clientTask) setup(ctx context.Context, skuName string) error {
 		return err
 	}
 	c.auth_token = response.SkuSessionToken
+	c.use_v1_blob = response.UseV1Blob
 	return nil
 }
 
@@ -155,13 +159,14 @@ func buildRmaTokenJSON(rmaToken *pbp.Token) ([]byte, error) {
 
 // buildCaSubjectKeysJSON builds a CA subject keys JSON object from the given
 // keys.
-func buildCaSubjectKeysJSON(keys [][]byte) ([]byte, error) {
+func buildCaSubjectKeysJSON(keys [][]byte, useV1Blob bool) ([]byte, error) {
 	if len(keys) < 2 {
 		return nil, fmt.Errorf("expected at least 2 CA subject keys, got %d", len(keys))
 	}
 	caKeys := &pbd.CaSubjectKeysJSON{
 		DiceAuthKeyKeyId: make([]uint32, 20),
 		ExtAuthKeyKeyId:  make([]uint32, 20),
+		UseV1Blob:        useV1Blob,
 	}
 	for i, b := range keys[0] {
 		caKeys.DiceAuthKeyKeyId[i] = uint32(b)
@@ -262,7 +267,7 @@ func processDut(ctx context.Context, c *clientTask, skuName string, dut *dututil
 	if err != nil {
 		return fmt.Errorf("failed to get CA subject keys: %w", err)
 	}
-	caKeysJSON, err := buildCaSubjectKeysJSON(caKeysResp.KeyIds)
+	caKeysJSON, err := buildCaSubjectKeysJSON(caKeysResp.KeyIds, c.use_v1_blob)
 	if err != nil {
 		return fmt.Errorf("failed to build CA subject keys JSON: %w", err)
 	}

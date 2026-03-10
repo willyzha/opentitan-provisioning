@@ -240,6 +240,15 @@ DLLEXPORT int InitSession(ate_client_ptr client, const char* sku,
   return 0;
 }
 
+DLLEXPORT bool UseV1Blob(ate_client_ptr client) {
+  DLOG(INFO) << "UseV1Blob";
+  if (client != nullptr) {
+    AteClient* ate = reinterpret_cast<AteClient*>(client);
+    return ate->UseV1Blob();
+  }
+  return false;
+}
+
 DLLEXPORT int CloseSession(ate_client_ptr client) {
   DLOG(INFO) << "CloseSession";
   AteClient* ate = reinterpret_cast<AteClient*>(client);

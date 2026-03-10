@@ -308,7 +308,7 @@ DLLEXPORT int RmaTokenFromJson(const dut_spi_frame_t *frame,
 
 DLLEXPORT int CaSubjectKeysToJson(const ca_subject_key_t *dice_ca_sn,
                                   const ca_subject_key_t *aux_ca_sn,
-                                  dut_spi_frame_t *result) {
+                                  bool use_v1_blob, dut_spi_frame_t *result) {
   if (result == nullptr) {
     LOG(ERROR) << "Invalid result buffer";
     return -1;
@@ -327,6 +327,7 @@ DLLEXPORT int CaSubjectKeysToJson(const ca_subject_key_t *dice_ca_sn,
     ca_key_ids_cmd.add_dice_auth_key_key_id(dice_ca_sn->data[i]);
     ca_key_ids_cmd.add_ext_auth_key_key_id(aux_ca_sn->data[i]);
   }
+  ca_key_ids_cmd.set_use_v1_blob(use_v1_blob);
 
   std::string command;
   google::protobuf::util::JsonPrintOptions options;

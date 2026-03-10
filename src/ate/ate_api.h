@@ -553,6 +553,14 @@ DLLEXPORT int InitSession(ate_client_ptr client, const char* sku,
                           const char* sku_auth);
 
 /**
+ * Check if the current session should use the V1 blob format.
+ *
+ * @param client A client instance.
+ * @return True if the V1 blob format should be used.
+ */
+DLLEXPORT bool UseV1Blob(ate_client_ptr client);
+
+/**
  * close session for specific sku.
  *
  * @param client A client instance.
@@ -743,16 +751,17 @@ DLLEXPORT int RmaTokenFromJson(const dut_spi_frame_t* frame,
                                token_t* rma_token);
 
 /**
- * Generate JSON command to inject the CA subject keys.
+ * Generates a JSON command containing the DICE and auxiliary CA subject keys.
  *
- * @param dice_ca_sn The DICE CA subject key.
- * @param aux_ca_sn The auxiliary CA subject key.
+ * @param[in] dice_ca_sn The DICE CA subject key.
+ * @param[in] aux_ca_sn The auxiliary CA subject key.
+ * @param[in] use_v1_blob Whether to use the V1 blob format.
  * @param[out] result The generated JSON command.
  * @return The result of the operation.
  */
 DLLEXPORT int CaSubjectKeysToJson(const ca_subject_key_t* dice_ca_sn,
                                   const ca_subject_key_t* aux_ca_sn,
-                                  dut_spi_frame_t* result);
+                                  bool use_v1_blob, dut_spi_frame_t* result);
 
 /**
  * Generate JSON command to inject personalization blob.

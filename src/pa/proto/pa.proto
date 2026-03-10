@@ -186,6 +186,8 @@ message InitSessionResponse {
   string pa_endpoint = 2;
   // List of authenticate methods. Required.
   repeated string auth_methods = 3;
+  // Indicates if the V1 blob format should be used.
+  bool use_v1_blob = 4;
 }
 
 // Get CA serial numbers request.
