@@ -58,13 +58,19 @@ jobs:
       # above is not sufficient on self hosted runners.
       - name: Initialize LFS objects
         run: git lfs pull
-      - name: Run provisioning appliance load test
-        run: OPENTITAN_VAR_DIR=$(pwd)/.otvar-dev ./tests/run_pa_loadtest.sh --prod
       - name: Run provisioning appliance load test (PQ)
+        if: always()
         run: OPENTITAN_VAR_DIR=$(pwd)/.otvar-dev-pq ./tests/run_pa_loadtest.sh --pq
-      - name: Run TLS test
-        run: OPENTITAN_VAR_DIR=$(pwd)/.otvar-dev ./tests/run_tls_test.sh --prod
       - name: Run integration tests (SoftHSM2)
+        if: always()
         run: OT_PROV_ORCHESTRATOR_PATH="${OT_PROV_ORCHESTRATOR_PATH}" OT_PROV_ORCHESTRATOR_UNPACK="${OT_PROV_ORCHESTRATOR_UNPACK}" OPENTITAN_VAR_DIR=$(pwd)/.otvar-dev ./tests/run_ate_test.sh
-      - name: Run integration tests (Thales HSM)
-        run: OT_PROV_ORCHESTRATOR_PATH="${OT_PROV_ORCHESTRATOR_PATH}" OT_PROV_ORCHESTRATOR_UNPACK="${OT_PROV_ORCHESTRATOR_UNPACK}" OPENTITAN_VAR_DIR=$(pwd)/.otvar-prod ./tests/run_ate_test.sh --prod
+      # The following tests are temporarily disabled because the CI machine HSM is unavailable.
+      # - name: Run provisioning appliance load test
+      #   if: always()
+      #   run: OPENTITAN_VAR_DIR=$(pwd)/.otvar-dev ./tests/run_pa_loadtest.sh --prod
+      # - name: Run TLS test
+      #   if: always()
+      #   run: OPENTITAN_VAR_DIR=$(pwd)/.otvar-dev ./tests/run_tls_test.sh --prod
+      # - name: Run integration tests (Thales HSM)
+      #   if: always()
+      #   run: OT_PROV_ORCHESTRATOR_PATH="${OT_PROV_ORCHESTRATOR_PATH}" OT_PROV_ORCHESTRATOR_UNPACK="${OT_PROV_ORCHESTRATOR_UNPACK}" OPENTITAN_VAR_DIR=$(pwd)/.otvar-prod ./tests/run_ate_test.sh --prod
