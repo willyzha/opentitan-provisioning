@@ -363,6 +363,10 @@ filegroup(
     name = "all",
     srcs = glob(["**"], exclude = ["**/*.html", "**/*.pdf"]),
 )
+filegroup(
+    name = "runtime_dlls",
+    srcs = glob(["i686-w64-mingw32.shared/bin/*.dll"]),
+)
 exports_files(glob(["bin/**"]))
 """
 

@@ -24,6 +24,15 @@ filegroup(
     ],
 )
 
+# MinGW runtime DLLs that binaries built with this toolchain load at runtime
+# (e.g. libstdc++-6.dll, libgcc_s_sjlj-1.dll, libwinpthread-1.dll). `pkg_win`
+# bundles these next to the artifacts it packages; tests that execute Windows
+# binaries need them staged alongside the binary as well.
+filegroup(
+    name = "runtime_dlls",
+    srcs = ["@gcc_mxe_mingw32_files//:runtime_dlls"],
+)
+
 [setup(
     name = device.name,
     architecture = device.architecture,
