@@ -2,7 +2,7 @@
 # Licensed under the Apache License, Version 2.0, see LICENSE for details.
 # SPDX-License-Identifier: Apache-2.0
 
-load("@io_bazel_rules_go//go:def.bzl", "go_binary")
+load("@io_bazel_rules_go//go:def.bzl", "go_binary", "go_test")
 load("@io_bazel_rules_docker//go:image.bzl", "go_image")
 
 package(default_visibility = ["//visibility:public"])
@@ -11,6 +11,7 @@ go_binary(
     name = "fake_registry_server",
     srcs = ["fake_registry.go"],
     deps = [
+        "//src/proto:registry_record_go_pb",
         "//src/proxy_buffer/proto:proxy_buffer_go_pb",
         "@org_golang_google_grpc//codes",
     ],
@@ -22,7 +23,24 @@ go_image(
     pure = "on",
     static = "on",
     deps = [
+        "//src/proto:registry_record_go_pb",
         "//src/proxy_buffer/proto:proxy_buffer_go_pb",
         "@org_golang_google_grpc//codes",
+    ],
+)
+
+go_test(
+    name = "fake_registry_test",
+    srcs = [
+        "fake_registry.go",
+        "fake_registry_test.go",
+    ],
+    deps = [
+        "//src/proto:registry_record_go_pb",
+        "//src/proxy_buffer/proto:proxy_buffer_go_pb",
+        "//src/proxy_buffer/services:http_registry",
+        "@com_github_google_go_cmp//cmp",
+        "@org_golang_google_grpc//codes",
+        "@org_golang_google_protobuf//testing/protocmp",
     ],
 )
