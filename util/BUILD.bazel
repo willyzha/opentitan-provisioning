@@ -3,12 +3,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 load("@io_bazel_rules_go//go:def.bzl", "go_binary")
+load("@rules_python//python:defs.bzl", "py_binary")
 
-# TODO(#41): make this a proper py_binary target
+package(default_visibility = ["//visibility:public"])
+
 exports_files([
     "ate_client_container.sh",
-    "fix_include_guard.py",
 ])
+
+py_binary(
+    name = "fix_include_guard",
+    srcs = ["fix_include_guard.py"],
+)
 
 go_binary(
     name = "generate_test_hpke_keys",

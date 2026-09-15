@@ -22,6 +22,7 @@ def _general_lint_impl(ctx):
         "@@INCLUDE_PATTERNS@@": " -o ".join(include_patterns),
         "@@LINT_TOOL@@": shell.quote(ctx.executable.lint_tool.short_path),
         "@@MODE@@": shell.quote(ctx.attr.mode),
+        "@@PROJECT_NAME@@": shell.quote(getattr(ctx.attr, "project_name", "")),
         "@@WORKSPACE@@": workspace,
         "@@RUNNER_SH@@": ctx.file._runner.path,
     }
@@ -38,7 +39,9 @@ def _general_lint_impl(ctx):
 
     return DefaultInfo(
         files = depset([out_file]),
-        runfiles = ctx.runfiles(files = runfiles),
+        runfiles = ctx.runfiles(files = runfiles).merge(
+            ctx.attr.lint_tool[DefaultInfo].default_runfiles,
+        ),
         executable = out_file,
     )
 
@@ -225,12 +228,15 @@ include_guard_attrs = {
         values = ["diff", "fix"],
         doc = "Execution mode: display diffs or fix formatting.",
     ),
+    "project_name": attr.string(
+        default = "OPENTITAN_PROVISIONING",
+        doc = "Project name prefix for include guards.",
+    ),
     "lint_tool": attr.label(
-        default = "//util:fix_include_guard.py",
-        allow_single_file = True,
-        cfg = "host",
+        default = "//util:fix_include_guard",
+        cfg = "exec",
         executable = True,
-        doc = "The include_guard.py tool.",
+        doc = "The include_guard tool.",
     ),
     "workspace": attr.label(
         allow_single_file = True,

@@ -6,11 +6,18 @@
 # Set mode and lint tool.
 LINT_TOOL=@@LINT_TOOL@@
 MODE=@@MODE@@
+PROJECT_NAME=@@PROJECT_NAME@@
 WORKSPACE="@@WORKSPACE@@"
 RUNNER_SH=@@RUNNER_SH@@
 
-lint_tool=$(readlink "$LINT_TOOL")
-runner_sh=$(readlink "$RUNNER_SH")
+resolve_runfile() {
+    local dir
+    dir="$(cd "$(dirname "$1")" && pwd)"
+    echo "${dir}/$(basename "$1")"
+}
+
+lint_tool=$(resolve_runfile "$LINT_TOOL")
+runner_sh=$(resolve_runfile "$RUNNER_SH")
 
 # Change directories based on whether the mode is to "fix" or to "diff".
 if [[ -n "${WORKSPACE}" ]]; then

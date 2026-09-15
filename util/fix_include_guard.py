@@ -17,16 +17,10 @@
 # stderr and will exit at the end with a nonzero status code.
 
 import argparse
+import os
 import re
 import sys
 from pathlib import Path
-
-# TODO(#41): make this a command line arg.
-PROJECT_NAME = "OPENTITAN_PROVISIONING"
-
-# This file is $REPO_TOP/util/fix_include_guard.py, so it takes two parent()
-# calls to get back to the top.
-REPO_TOP = Path(__file__).resolve().parent.parent
 
 
 def main():
@@ -34,25 +28,39 @@ def main():
     parser.add_argument('--dry-run',
                         action='store_true',
                         help='report writes which would have happened')
+    parser.add_argument('--project-name',
+                        type=str,
+                        default='OPENTITAN_PROVISIONING',
+                        help='project name prefix for include guards')
     parser.add_argument('headers',
                         type=str,
                         nargs='+',
                         help='headers to fix guards for')
     args = parser.parse_args()
 
+    repo_top = Path(os.environ.get('BUILD_WORKSPACE_DIRECTORY',
+                                   Path.cwd())).resolve()
+    script_repo_top = Path(__file__).resolve().parent.parent
+
     total_unfixable = 0
     total_fixable = 0
 
     for header_path in args.headers:
-        header = Path(header_path).resolve().relative_to(REPO_TOP)
+        resolved_header = Path(header_path).resolve()
+        try:
+            header = resolved_header.relative_to(repo_top)
+        except ValueError:
+            header = resolved_header.relative_to(script_repo_top)
+
         if header.suffix != '.h' or 'vendor' in header.parts:
             continue
 
         uppercase_dir = re.sub(r'[^\w]', '_', str(header.parent)).upper()
         uppercase_stem = re.sub(r'[^\w]', '_', str(header.stem)).upper()
-        guard = '%s_%s_%s_H_' % (PROJECT_NAME, uppercase_dir, uppercase_stem)
+        guard = '%s_%s_%s_H_' % (args.project_name, uppercase_dir,
+                                 uppercase_stem)
 
-        header_text = header.read_text()
+        header_text = resolved_header.read_text()
         header_original = header_text
 
         # Find the first non-comment, non-whitespace line in the file
@@ -92,7 +100,7 @@ def main():
             print('Fixing header: "%s"' % (header, ), file=sys.stdout)
             total_fixable += 1
             if not args.dry_run:
-                header.write_text(header_text)
+                resolved_header.write_text(header_text)
 
     if total_fixable:
         verb = 'Would have fixed' if args.dry_run else 'Fixed'

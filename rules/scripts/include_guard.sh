@@ -5,11 +5,11 @@
 
 case "$MODE" in
     diff)
-        echo "$FILES" | xargs ${lint_tool} --dry-run
+        echo "$FILES" | xargs ${lint_tool} --project-name "${PROJECT_NAME}" --dry-run
         exit $?
         ;;
     fix)
-        echo "$FILES" | xargs ${lint_tool}
+        echo "$FILES" | xargs ${lint_tool} --project-name "${PROJECT_NAME}"
         ;;
     *)
         echo "Unknown mode: $MODE"
