@@ -353,6 +353,17 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Number of (complete) certs extracted: "
             << num_dut_endorsed_certs;
 
+  // Configure signing algorithm parameters for each extracted TBS certificate.
+  for (size_t i = 0; i < num_tbs_certs; ++i) {
+    std::string label(tbs_certs[i].key_label, tbs_certs[i].key_label_size);
+    if (label.find("MLDSA") != std::string::npos) {
+      tbs_certs[i].algorithm_type = kSigningAlgorithmTypeMldsa;
+      tbs_certs[i].mldsa_param_set = kMldsaParamSet87;
+    } else {
+      tbs_certs[i].algorithm_type = kSigningAlgorithmTypeEcdsa;
+    }
+  }
+
   // Endorse the TBS certs with the PA/SPM.
   // TODO(timothytrippel): Set diversifier to "was" || CP device ID.
   diversifier_bytes_t was_diversifier = {0};
@@ -368,24 +379,30 @@ int main(int argc, char** argv) {
     return -1;
   }
 
-  // Retrieve CA root and ICA DICE certificates but only for pi01 SKU.
+  // Retrieve CA root and ICA DICE certificates for pi01 / sival_pqc SKUs.
+  std::vector<endorse_cert_response_t> ca_certs_storage;
   size_t num_ca_certs = 0;
   endorse_cert_response_t* ca_certs = nullptr;
-  if (absl::GetFlag(FLAGS_sku) == "pi01") {
-    constexpr size_t kNumDiceCaCerts = 2;
-    endorse_cert_response_t dice_ca_certs[kNumDiceCaCerts];
-    const char* kDiceCaCertLabels[] = {
+  if (absl::GetFlag(FLAGS_sku) == "pi01" ||
+      absl::GetFlag(FLAGS_sku) == "sival_pqc") {
+    std::vector<const char*> ca_cert_labels = {
         "root",
         "dice",
     };
+    if (absl::GetFlag(FLAGS_enable_mldsa_dice) ||
+        absl::GetFlag(FLAGS_sku) == "sival_pqc") {
+      ca_cert_labels.push_back("root_mldsa");
+      ca_cert_labels.push_back("dice_mldsa");
+    }
+    ca_certs_storage.resize(ca_cert_labels.size());
     if (GetCaCerts(ate_client, absl::GetFlag(FLAGS_sku).c_str(),
-                   /*count=*/kNumDiceCaCerts, kDiceCaCertLabels,
-                   dice_ca_certs) != 0) {
+                   /*count=*/ca_cert_labels.size(), ca_cert_labels.data(),
+                   ca_certs_storage.data()) != 0) {
       LOG(ERROR) << "GetCaCerts failed.";
       return -1;
     }
 
-    const endorse_cert_response_t* kDiceRootCa = &dice_ca_certs[0];
+    const endorse_cert_response_t* kDiceRootCa = &ca_certs_storage[0];
     LOG(INFO) << absl::StrFormat("Root Dice Cert (%d bytes): ",
                                  kDiceRootCa->cert_size);
     for (size_t i = 0; i < kDiceRootCa->cert_size; ++i) {
@@ -393,8 +410,8 @@ int main(int argc, char** argv) {
     }
     std::cout << std::endl;
 
-    num_ca_certs = kNumDiceCaCerts;
-    ca_certs = dice_ca_certs;
+    num_ca_certs = ca_certs_storage.size();
+    ca_certs = ca_certs_storage.data();
   }
 
   // Send the endorsed certs back to the device.
